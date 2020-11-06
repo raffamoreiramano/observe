@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "547325473125",
+    "firebase_url": "https://observe-a92d7.firebaseio.com",
+    "project_id": "observe-a92d7",
+    "storage_bucket": "observe-a92d7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:547325473125:android:791af203faaa75f932b18c",
+        "android_client_info": {
+          "package_name": "com.example.observe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "547325473125-df1prtutgv0ig5fjh7b82jg9jgei9gd2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQtF75Ibm5x--IFamG4vA4fbT1tuYknis"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "547325473125-df1prtutgv0ig5fjh7b82jg9jgei9gd2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
