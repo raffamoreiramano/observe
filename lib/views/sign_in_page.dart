@@ -19,6 +19,7 @@ class _SignInState extends State<SignIn> {
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController _emailCTRL = TextEditingController();
   TextEditingController _passwordCTRL = TextEditingController();
+  bool _passwordVisibility = true;
 
   @override
   void initState() {
@@ -121,25 +122,51 @@ class _SignInState extends State<SignIn> {
                       Container(
                         margin: EdgeInsets.symmetric(
                           horizontal: 40,
-                          vertical: 15,
+                          vertical: 15,                          
                         ),
-                        child: TextFormField(
-                          controller: _passwordCTRL,
-                          decoration: roundedFormInput('Senha'),
-                          style: TextStyle(
-                            color: Colors.white
-                          ),
-                          validator: (value) {
-                            bool isPasswordValid = RegExp(
-                              r'^(?=.*[0-9]+.*)(?=.*[a-zA-Z]+.*)[0-9a-zA-Z!@#\$&*~]{6,18}$'
-                            ).hasMatch(value);
+                        child: Stack(
+                          children: [
+                            TextFormField(
+                              controller: _passwordCTRL,
+                              decoration: roundedFormInput('Senha'),
+                              obscureText: _passwordVisibility,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                              validator: (value) {
+                                bool isPasswordValid = RegExp(
+                                  r'^(?=.*[0-9]+.*)(?=.*[a-zA-Z]+.*)[0-9a-zA-Z!@#\$&*~]{6,18}$'
+                                ).hasMatch(value);
 
-                            if (isPasswordValid) {
-                              return null;
-                            } else {
-                              return "Senha inválida!";
-                            }
-                          },
+                                if (isPasswordValid) {
+                                  return null;
+                                } else {
+                                  return "Senha inválida!";
+                                }
+                              },
+                            ),
+                            Align(
+                              alignment: Alignment.bottomRight,
+                              child: Container(
+                                width: 59,
+                                height: 59,
+                                child: IconButton(
+                                  splashRadius: 28,
+                                  onPressed: () {
+                                    setState(() {
+                                      _passwordVisibility = !_passwordVisibility;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    _passwordVisibility 
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                    color: Colors.white38,
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
                         ),
                       ),
                       Container(
