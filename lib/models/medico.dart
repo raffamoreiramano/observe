@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Usuario {
+class Medico {
   String uid, username, nome, email, bio, rg, localidade, cpfcnpj;
   Timestamp cadastro, nascimento;
 
-  Usuario({
+  Medico({
     this.uid,
     this.username,
     this.nome,
@@ -17,7 +17,7 @@ class Usuario {
     this.nascimento,
   });
 
-  Usuario.fromMap({String uid, Map<String, dynamic> data}) {
+  Medico.fromMap({String uid, Map<String, dynamic> data}) {
     this.uid = uid;
     this.username = data['username'];
     this.nome = data['nome'];
