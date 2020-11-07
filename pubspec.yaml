@@ -26,6 +26,7 @@ dependencies:
 
   get: ^3.15.0
   http: ^0.12.1
+  dio: ^3.0.10
   firebase_auth: ^0.18.2
   firebase_core : ^0.5.1
   cloud_firestore: ^0.14.2
