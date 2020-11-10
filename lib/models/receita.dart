@@ -1,49 +1,52 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:observe/models/remedio.dart';
 
 class Receita {
-  String uid, username, nome, email, bio, rg, localidade, cpfcnpj;
-  Timestamp cadastro, nascimento;
+  int id, mid, pid;
+  List<dynamic> remedios;
 
   Receita({
-    this.uid,
-    this.username,
-    this.nome,
-    this.email,
-    this.bio,
-    this.rg,
-    this.localidade,
-    this.cpfcnpj,
-    this.cadastro,
-    this.nascimento,
+    this.id,
+    this.mid,
+    this.pid,
+    this.remedios,
   });
 
-  Receita.fromMap({String uid, Map<String, dynamic> data}) {
-    this.uid = uid;
-    this.username = data['username'];
-    this.nome = data['nome'];
-    this.email = data['email'];
-    this.bio = data['email'];
-    this.rg = data['rg'];
-    this.localidade = data['localidade'];
-    this.cpfcnpj = data['cpfcnpj'];
-    this.cadastro = data['cadastro'];
-    this.nascimento = data['nascimento'];
+  Receita.fromMap({int id, Map<String, dynamic> data}) {
+    this.id = id;
+    this.mid = data['mid'];
+    this.pid = data['pid'];
+    this.remedios = data['remedios'];
   }
 
-  Map<String, dynamic> toMap() {
+  Receita.fromJson(String data) {
+    final _data = json.decode(data);
+
+    this.id = id;
+    this.mid = _data['mid'];
+    this.pid = _data['pid'];
+    this.remedios = _data['remedios'];
+  }
+
+  Map<String, dynamic> toMap({bool includeId = false}) {
     final Map<String, dynamic> data = {
-      'username': username,
-      'nome': nome,
-      'email': email,
-      'rg': rg,
-      'localidade': localidade,
-      'cpf_cnpj': cpfcnpj,
-      'cadastro': cadastro,
-      'nascimento': nascimento,
+      'id': includeId? id : null,
+      'mid': mid,
+      'pid': pid,
+      'remedios': remedios,
     };
 
     data.removeWhere((key, value) => value == null);
 
     return data;
+  }
+
+  String toJson() {
+    return json.encode(toMap());
+  }
+
+  @override
+  String toString() {
+    return json.encode(toMap(includeId: true));
   }
 }
