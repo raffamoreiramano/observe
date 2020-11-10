@@ -11,8 +11,8 @@ class Usuario {
     this.sobrenome,
   });
 
-  Usuario.fromMap({int id, Map<String, dynamic> data}) {
-    this.id = id;
+  Usuario.fromMap( Map<String, dynamic> data) {
+    this.id = data['id'];
     this.cid = data['cid'];
     this.nome = data['nome'];
     this.sobrenome = data['sobrenome'];
@@ -27,9 +27,9 @@ class Usuario {
     this.sobrenome = _data['sobrenome'];
   }
 
-  Map<String, dynamic> toMap({bool includeId = false}) {
+  Map<String, dynamic> toMap() {
     final Map<String, dynamic> data = {
-      'id': includeId? id : null,
+      'id': id,
       'cid': cid,
       'nome': nome,
       'sobrenome': sobrenome,
@@ -46,6 +46,6 @@ class Usuario {
 
   @override
   String toString() {
-    return json.encode(toMap(includeId: true));
+    return toJson();
   }
 }

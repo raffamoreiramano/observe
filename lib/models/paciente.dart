@@ -14,8 +14,8 @@ class Paciente {
     this.remedios,
   });
 
-  Paciente.fromMap({int id, Map<String, dynamic> data}) {
-    this.id = id;
+  Paciente.fromMap( Map<String, dynamic> data) {
+    this.id = data['id'];
     this.uid = data['cid'];
     this.nascimento = DateTime.parse(data['nascimento']);
     this.doencas = data['doencas'];
@@ -26,7 +26,7 @@ class Paciente {
   Paciente.fromJson(String data) {
     final _data = json.decode(data);
 
-    this.id = id;
+    this.id = _data['id'];
     this.uid = _data['uid'];
     this.nascimento = DateTime.parse(_data['nascimento']);
     this.doencas = _data['doencas'];
@@ -34,9 +34,9 @@ class Paciente {
     this.remedios = _data['remedios'];
   }
 
-  Map<String, dynamic> toMap({bool includeId = false}) {
+  Map<String, dynamic> toMap() {
     final Map<String, dynamic> data = {
-      'id': includeId? id : null,
+      'id': id,
       'uid': uid,
       'nascimento': nascimento.toIso8601String(),
       'doencas': doencas,
@@ -55,6 +55,6 @@ class Paciente {
 
   @override
   String toString() {
-    return json.encode(toMap(includeId: true));
+    return toJson();
   }
 }

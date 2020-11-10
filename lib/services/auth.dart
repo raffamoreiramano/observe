@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:observe/models/usuario.dart';
+import 'package:observe/repositories/usuario_repository.dart';
+import 'package:observe/services/api.dart';
 class AuthMethods {
   final FirebaseAuth _auth;
+  final ObserveAPI _api = ObserveAPI();
 
   AuthMethods(this._auth);
 
@@ -20,22 +24,22 @@ class AuthMethods {
 
   Future<String> signUp({String name, String lastname, String email, String password}) async {
     try {
-      // DatabaseMethods databaseMethods = DatabaseMethods();
+      UsuarioRepository _repo = UsuarioRepository();
       UserCredential credentials = await _auth.createUserWithEmailAndPassword(email: email, password: password);
 
-      // Usuario usuario = Usuario(
-      //   uid: credentials.user.uid,
-      //   nome: nome,
-      //   sobrenome: sobrenome,
-      //   email: email,
-      // );
+      Usuario usuario = Usuario(
+        cid: credentials.user.uid,
+        nome: name,
+        sobrenome: lastname
+      );
 
-      // await databaseMethods.createUser(
-      //   uid: usuario.uid,
-      //   data: usuario.toMap(),
-      // );
+      await _repo.createUsuario(usuario)
+        .then((value) async {
+          await credentials.user.sendEmailVerification();
+        }).catchError((error) async {
+          await credentials.user.delete();
+        });
 
-      await credentials.user.sendEmailVerification();
 
       return 'success';
     } on FirebaseAuthException catch (e) {

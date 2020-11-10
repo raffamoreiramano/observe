@@ -27,7 +27,7 @@ class Remedio {
     this.horario = _data['horario'];
   }
 
-  Map<String, dynamic> toMap({bool includeId = false}) {
+  Map<String, dynamic> toMap() {
     final Map<String, dynamic> data = {
       'nome': nome,
       'medida': medida,
@@ -40,5 +40,10 @@ class Remedio {
 
   String toJson() {
     return json.encode(toMap());
+  }
+
+  @override
+  String toString() {
+    return toJson();
   }
 }

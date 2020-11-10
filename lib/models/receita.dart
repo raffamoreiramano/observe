@@ -3,7 +3,7 @@ import 'package:observe/models/remedio.dart';
 
 class Receita {
   int id, mid, pid;
-  List<dynamic> remedios;
+  List<Remedio> remedios;
 
   Receita({
     this.id,
@@ -12,28 +12,40 @@ class Receita {
     this.remedios,
   });
 
-  Receita.fromMap({int id, Map<String, dynamic> data}) {
-    this.id = id;
+  Receita.fromMap(Map<String, dynamic> data) {
+    final List<Remedio> _remedios = 
+      List.from(data['remedios'])
+      .map((remedio) => Remedio.fromMap(remedio))
+      .toList();
+
+    this.id = data['id'];
     this.mid = data['mid'];
     this.pid = data['pid'];
-    this.remedios = data['remedios'];
+    this.remedios = _remedios;
   }
 
   Receita.fromJson(String data) {
     final _data = json.decode(data);
 
-    this.id = id;
+    final _remedios = 
+      List.from(_data['remedios'])
+      .map((remedio) => Remedio.fromMap(remedio))
+      .toList();
+
+    this.id = _data['id'];
     this.mid = _data['mid'];
     this.pid = _data['pid'];
-    this.remedios = _data['remedios'];
+    this.remedios = _remedios;
   }
 
-  Map<String, dynamic> toMap({bool includeId = false}) {
+  Map<String, dynamic> toMap() {
+    final _remedios = remedios.map((remedio) => remedio.toMap()).toList();
+
     final Map<String, dynamic> data = {
-      'id': includeId? id : null,
+      'id': id,
       'mid': mid,
       'pid': pid,
-      'remedios': remedios,
+      'remedios': _remedios,
     };
 
     data.removeWhere((key, value) => value == null);
@@ -47,6 +59,6 @@ class Receita {
 
   @override
   String toString() {
-    return json.encode(toMap(includeId: true));
+    return toJson();
   }
 }

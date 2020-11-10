@@ -10,8 +10,8 @@ class Medico {
     this.crm,
   });
 
-  Medico.fromMap({int id, Map<String, dynamic> data}) {
-    this.id = id;
+  Medico.fromMap(Map<String, dynamic> data) {
+    this.id = data['id'];
     this.uid = data['uid'];
     this.crm = data['crm'];
   }
@@ -42,6 +42,6 @@ class Medico {
 
   @override
   String toString() {
-    return json.encode(toMap(includeId: true));
+    return toJson();
   }
 }
