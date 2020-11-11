@@ -19,9 +19,18 @@ class PacienteRepository {
     }
   }
 
-  Future<Paciente> readPaciente(int id) async {
+  Future<Paciente> readPaciente({int id, String cid}) async {
     try {
-      APIResponse response = await _api.get('$_route/$id');
+      if ((id == null && cid == null) || (id != null && cid != null)) {
+        throw {
+          'status': 400,
+          'data': 'Bad Request'
+        };
+      }
+
+      final _key = id == null ? 'cid/$cid' : 'id/$id';
+
+      APIResponse response = await _api.get('$_route/$_key');
 
       if (response.status != 200) {
         throw response;

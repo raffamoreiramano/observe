@@ -19,9 +19,18 @@ class UsuarioRepository {
     }
   }
 
-  Future<Usuario> readUsuario(int id) async {
+  Future<Usuario> readUsuario({int id, String cid}) async {
     try {
-      APIResponse response = await _api.get('$_route/$id');
+      if ((id == null && cid == null) || (id != null && cid != null)) {
+        throw {
+          'status': 400,
+          'data': 'Bad Request'
+        };
+      }
+
+      final _key = id == null ? 'cid/$cid' : 'id/$id';
+
+      APIResponse response = await _api.get('$_route/$_key');
 
       if (response.status != 200) {
         throw response;
@@ -41,7 +50,7 @@ class UsuarioRepository {
         throw response;
       }
 
-      return await readUsuario(id);
+      return await readUsuario(id: id);
     } on APIResponse {
       rethrow;
     }

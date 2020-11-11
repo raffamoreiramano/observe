@@ -21,7 +21,7 @@ class ReceitaRepository {
 
   Future<Receita> readReceita(int id) async {
     try {
-      APIResponse response = await _api.get('$_route/$id');
+      APIResponse response = await _api.get('$_route/id/$id');
 
       if (response.status != 200) {
         throw response;

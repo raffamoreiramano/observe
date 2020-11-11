@@ -15,11 +15,7 @@ class _MainPageState extends State<MainPage> {
       body: Center(
         child: IconButton(
           onPressed: () async {
-            // context.read<AuthMethods>().signOut();
-
-            ReceitaRepository repositorio = ReceitaRepository();
-
-            await repositorio.readReceita(1).then((value) => print(value.toString()));
+            context.read<AuthMethods>().signOut();
           },
           icon: Icon(
             Icons.exit_to_app
