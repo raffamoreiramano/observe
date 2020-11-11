@@ -1,49 +1,47 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 
 class Medico {
-  String uid, username, nome, email, bio, rg, localidade, cpfcnpj;
-  Timestamp cadastro, nascimento;
+  int id, uid;
+  String crm;
 
   Medico({
+    this.id,
     this.uid,
-    this.username,
-    this.nome,
-    this.email,
-    this.bio,
-    this.rg,
-    this.localidade,
-    this.cpfcnpj,
-    this.cadastro,
-    this.nascimento,
+    this.crm,
   });
 
-  Medico.fromMap({String uid, Map<String, dynamic> data}) {
-    this.uid = uid;
-    this.username = data['username'];
-    this.nome = data['nome'];
-    this.email = data['email'];
-    this.bio = data['email'];
-    this.rg = data['rg'];
-    this.localidade = data['localidade'];
-    this.cpfcnpj = data['cpfcnpj'];
-    this.cadastro = data['cadastro'];
-    this.nascimento = data['nascimento'];
+  Medico.fromMap(Map<String, dynamic> data) {
+    this.id = data['id'];
+    this.uid = data['uid'];
+    this.crm = data['crm'];
   }
 
-  Map<String, dynamic> toMap() {
+  Medico.fromJson(String data) {
+    final _data = json.decode(data);
+
+    this.id = _data['id'];
+    this.uid = _data['uid'];
+    this.crm = _data['crm'];
+  }
+
+  Map<String, dynamic> toMap({bool includeId = false}) {
     final Map<String, dynamic> data = {
-      'username': username,
-      'nome': nome,
-      'email': email,
-      'rg': rg,
-      'localidade': localidade,
-      'cpf_cnpj': cpfcnpj,
-      'cadastro': cadastro,
-      'nascimento': nascimento,
+      'id': includeId? id : null,
+      'uid': uid,
+      'crm': crm,
     };
 
     data.removeWhere((key, value) => value == null);
 
     return data;
+  }
+
+  String toJson() {
+    return json.encode(toMap());
+  }
+
+  @override
+  String toString() {
+    return toJson();
   }
 }

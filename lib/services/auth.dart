@@ -1,4 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:observe/models/usuario.dart';
+import 'package:observe/repositories/usuario_repository.dart';
+
 class AuthMethods {
   final FirebaseAuth _auth;
 
@@ -8,34 +11,44 @@ class AuthMethods {
 
   Future<String> signIn({String email, String password}) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      UsuarioRepository _repo = UsuarioRepository();
+      await _auth.signInWithEmailAndPassword(email: email, password: password)
+        .then((credentials) async {
+          var response = await _repo.readUsuario(cid: credentials.user.uid);
+          print(response.toString());
+        }).catchError((e) {
+          throw e;
+        });
 
       return 'success';
     } on FirebaseAuthException catch (e) {
       return e.code;
     } catch (e) {
-      rethrow;
+      print(e.toString());
     }
   }
 
   Future<String> signUp({String name, String lastname, String email, String password}) async {
     try {
-      // DatabaseMethods databaseMethods = DatabaseMethods();
-      UserCredential credentials = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      UsuarioRepository _repo = UsuarioRepository();
 
-      // Usuario usuario = Usuario(
-      //   uid: credentials.user.uid,
-      //   nome: nome,
-      //   sobrenome: sobrenome,
-      //   email: email,
-      // );
+      await _auth.createUserWithEmailAndPassword(email: email, password: password)
+        .then((credentials) async {
+          Usuario usuario = Usuario(
+            cid: credentials.user.uid,
+            nome: name,
+            sobrenome: lastname
+          );
 
-      // await databaseMethods.createUser(
-      //   uid: usuario.uid,
-      //   data: usuario.toMap(),
-      // );
-
-      await credentials.user.sendEmailVerification();
+          await _repo.createUsuario(usuario)
+            .then((value) async {
+              await credentials.user.sendEmailVerification();
+            }).catchError((error) async {
+              await credentials.user.delete();
+            });
+        }).catchError((e) {
+          throw e;
+        });
 
       return 'success';
     } on FirebaseAuthException catch (e) {

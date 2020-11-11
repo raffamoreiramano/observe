@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 class APIResponse {
@@ -8,6 +10,14 @@ class APIResponse {
     this.status,
     this.data,
   });
+
+  @override
+  String toString() {
+    return json.encode({
+      'status': status,
+      'data': data
+    });
+  }
 }
 
 class ObserveAPI {
@@ -22,7 +32,10 @@ class ObserveAPI {
   );
 
   Future<APIResponse> get(String route) async {
-    Response response = await _dio.get(_path + route, options: _options);
+    Response response = await _dio.get(
+      [_path, route].join('/'),
+      options: _options
+    );
 
     return APIResponse(
       status: response.statusCode,
@@ -34,7 +47,7 @@ class ObserveAPI {
 
   Future<APIResponse> post({String route, String data}) async {
     Response response = await _dio.post(
-      _path + route,
+      [_path, route].join('/'),
       options: _options,
       data: data
     );
@@ -47,7 +60,7 @@ class ObserveAPI {
     );
   }
 
-  Future<APIResponse> put({String route, String id, String data}) async {
+  Future<APIResponse> put({String route, int id, String data}) async {
     Response response = await _dio.put(
       [_path, route, id].join('/'),
       options: _options,
@@ -62,7 +75,7 @@ class ObserveAPI {
     );
   }
 
-  Future<APIResponse> delete({String route, String id}) async {
+  Future<APIResponse> delete({String route, int id}) async {
     Response response = await _dio.delete(
       [_path, route, id].join('/'),
       options: _options

@@ -1,49 +1,64 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:observe/models/remedio.dart';
 
 class Receita {
-  String uid, username, nome, email, bio, rg, localidade, cpfcnpj;
-  Timestamp cadastro, nascimento;
+  int id, mid, pid;
+  List<Remedio> remedios;
 
   Receita({
-    this.uid,
-    this.username,
-    this.nome,
-    this.email,
-    this.bio,
-    this.rg,
-    this.localidade,
-    this.cpfcnpj,
-    this.cadastro,
-    this.nascimento,
+    this.id,
+    this.mid,
+    this.pid,
+    this.remedios,
   });
 
-  Receita.fromMap({String uid, Map<String, dynamic> data}) {
-    this.uid = uid;
-    this.username = data['username'];
-    this.nome = data['nome'];
-    this.email = data['email'];
-    this.bio = data['email'];
-    this.rg = data['rg'];
-    this.localidade = data['localidade'];
-    this.cpfcnpj = data['cpfcnpj'];
-    this.cadastro = data['cadastro'];
-    this.nascimento = data['nascimento'];
+  Receita.fromMap(Map<String, dynamic> data) {
+    final List<Remedio> _remedios = 
+      List.from(data['remedios'])
+      .map((remedio) => Remedio.fromMap(remedio))
+      .toList();
+
+    this.id = data['id'];
+    this.mid = data['mid'];
+    this.pid = data['pid'];
+    this.remedios = _remedios;
+  }
+
+  Receita.fromJson(String data) {
+    final _data = json.decode(data);
+
+    final _remedios = 
+      List.from(_data['remedios'])
+      .map((remedio) => Remedio.fromMap(remedio))
+      .toList();
+
+    this.id = _data['id'];
+    this.mid = _data['mid'];
+    this.pid = _data['pid'];
+    this.remedios = _remedios;
   }
 
   Map<String, dynamic> toMap() {
+    final _remedios = remedios.map((remedio) => remedio.toMap()).toList();
+
     final Map<String, dynamic> data = {
-      'username': username,
-      'nome': nome,
-      'email': email,
-      'rg': rg,
-      'localidade': localidade,
-      'cpf_cnpj': cpfcnpj,
-      'cadastro': cadastro,
-      'nascimento': nascimento,
+      'id': id,
+      'mid': mid,
+      'pid': pid,
+      'remedios': _remedios,
     };
 
     data.removeWhere((key, value) => value == null);
 
     return data;
+  }
+
+  String toJson() {
+    return json.encode(toMap());
+  }
+
+  @override
+  String toString() {
+    return toJson();
   }
 }

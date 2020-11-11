@@ -1,49 +1,60 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 
 class Paciente {
-  String uid, username, nome, email, bio, rg, localidade, cpfcnpj;
-  Timestamp cadastro, nascimento;
+  int id, uid;
+  DateTime nascimento;
+  List<dynamic> doencas, alergias, remedios;
 
   Paciente({
+    this.id,
     this.uid,
-    this.username,
-    this.nome,
-    this.email,
-    this.bio,
-    this.rg,
-    this.localidade,
-    this.cpfcnpj,
-    this.cadastro,
     this.nascimento,
+    this.doencas,
+    this.alergias,
+    this.remedios,
   });
 
-  Paciente.fromMap({String uid, Map<String, dynamic> data}) {
-    this.uid = uid;
-    this.username = data['username'];
-    this.nome = data['nome'];
-    this.email = data['email'];
-    this.bio = data['email'];
-    this.rg = data['rg'];
-    this.localidade = data['localidade'];
-    this.cpfcnpj = data['cpfcnpj'];
-    this.cadastro = data['cadastro'];
-    this.nascimento = data['nascimento'];
+  Paciente.fromMap( Map<String, dynamic> data) {
+    this.id = data['id'];
+    this.uid = data['cid'];
+    this.nascimento = DateTime.parse(data['nascimento']);
+    this.doencas = data['doencas'];
+    this.alergias = data['alergias'];
+    this.remedios = data['remedios'];
+  }
+
+  Paciente.fromJson(String data) {
+    final _data = json.decode(data);
+
+    this.id = _data['id'];
+    this.uid = _data['uid'];
+    this.nascimento = DateTime.parse(_data['nascimento']);
+    this.doencas = _data['doencas'];
+    this.alergias = _data['alergias'];
+    this.remedios = _data['remedios'];
   }
 
   Map<String, dynamic> toMap() {
     final Map<String, dynamic> data = {
-      'username': username,
-      'nome': nome,
-      'email': email,
-      'rg': rg,
-      'localidade': localidade,
-      'cpf_cnpj': cpfcnpj,
-      'cadastro': cadastro,
-      'nascimento': nascimento,
+      'id': id,
+      'uid': uid,
+      'nascimento': nascimento.toIso8601String(),
+      'doencas': doencas,
+      'alergias': alergias,
+      'remedios': remedios,
     };
 
     data.removeWhere((key, value) => value == null);
 
     return data;
+  }
+
+  String toJson() {
+    return json.encode(toMap());
+  }
+
+  @override
+  String toString() {
+    return toJson();
   }
 }
