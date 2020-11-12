@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:observe/repositories/receita_repository.dart';
 import 'package:observe/services/auth.dart';
 import 'package:provider/provider.dart';
 
@@ -13,13 +12,21 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: IconButton(
-          onPressed: () async {
-            context.read<AuthMethods>().signOut();
-          },
-          icon: Icon(
-            Icons.exit_to_app
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              child: IconButton(
+                onPressed: () async {
+                  context.read<AuthMethods>().signOut();
+                },
+                icon: Icon(
+                  Icons.exit_to_app
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
