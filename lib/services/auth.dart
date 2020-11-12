@@ -7,24 +7,17 @@ class AuthMethods {
 
   AuthMethods(this._auth);
 
-  Stream<User> get authState => _auth.authStateChanges();
+  Stream<User> get authState => _auth.userChanges();
 
   Future<String> signIn({String email, String password}) async {
     try {
-      UsuarioRepository _repo = UsuarioRepository();
-      await _auth.signInWithEmailAndPassword(email: email, password: password)
-        .then((credentials) async {
-          var response = await _repo.readUsuario(cid: credentials.user.uid);
-          print(response.toString());
-        }).catchError((e) {
-          throw e;
-        });
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
 
       return 'success';
     } on FirebaseAuthException catch (e) {
       return e.code;
     } catch (e) {
-      print(e.toString());
+      rethrow;
     }
   }
 

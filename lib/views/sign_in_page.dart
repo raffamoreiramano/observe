@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/services/auth.dart';
 import 'package:observe/widgets/input_decoration.dart';
@@ -181,7 +182,7 @@ class _SignInState extends State<SignIn> {
                                 _visible = false;
                               });
                               
-                              signIn();
+                              await signIn();
                             }
                           },
                           child: Text(

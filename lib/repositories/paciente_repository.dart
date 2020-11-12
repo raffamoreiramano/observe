@@ -50,7 +50,7 @@ class PacienteRepository {
         throw response;
       }
 
-      return await readPaciente(id);
+      return await readPaciente(id: id);
     } on APIResponse {
       rethrow;
     }
