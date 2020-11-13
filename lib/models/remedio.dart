@@ -4,6 +4,14 @@ class Remedio {
   String nome, medida, horario;
   double quantia;
 
+  bool get isEmpty {
+    return toMap().isEmpty;
+  }
+
+  bool get isNotEmpty {
+    return toMap().isNotEmpty;
+  }
+  
   Remedio({
     this.nome,
     this.medida,

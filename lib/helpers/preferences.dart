@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'package:observe/models/medico.dart';
 import 'package:observe/models/paciente.dart';
+import 'package:observe/models/receita.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Preferences {
   final SharedPreferences _preferences;
+  // Usuario usuario;
+  // Medico medico;
+  // Paciente paciente;
+  // List<Receita> receitas;
 
   Preferences(this._preferences);
 
@@ -17,7 +22,7 @@ class Preferences {
 
   Usuario getUsuario() {
     String usuario = _preferences.getString('usuario');
-    return Usuario.fromJson(usuario);
+    return usuario.isEmpty ? Usuario() : Usuario.fromJson(usuario);
   }
 
   Future setMedico(Medico medico) async {
@@ -26,7 +31,7 @@ class Preferences {
 
   Medico getMedico() {
     String medico = _preferences.getString('medico');
-    return Medico.fromJson(medico);
+    return medico.isEmpty ? Medico() : Medico.fromJson(medico);
   }
 
   Future setPaciente(Paciente paciente) async {
@@ -35,7 +40,26 @@ class Preferences {
 
   Paciente getPaciente() {
     String paciente = _preferences.getString('paciente');
-    return Paciente.fromJson(paciente);
+    return paciente.isEmpty ? Paciente() : Paciente.fromJson(paciente);
+  }
+
+  Future setReceitas(List<Receita> receitas) async {
+    List<String> _receitas = receitas.map((receita) => receita.toString()).toList();
+    await _preferences.setStringList('receitas', _receitas);
+  }
+
+  List<Receita> getReceitas() {
+    List<String> _receitas = _preferences.getStringList('receitas');
+    List<Receita> receitas = _receitas.map((receita) => Receita.fromJson(receita)).toList();
+    return receitas;
+  }
+
+  Future setPerfil(String tipo) async {
+    await _preferences.setString('perfil', tipo);
+  }
+
+  String getPerfil() {
+    return _preferences.getString('perfil');
   }
 
   Future clear() async {

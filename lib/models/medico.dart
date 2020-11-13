@@ -4,6 +4,14 @@ class Medico {
   int id, uid;
   String crm;
 
+  bool get isEmpty {
+    return toMap().isEmpty;
+  }
+
+  bool get isNotEmpty {
+    return toMap().isNotEmpty;
+  }
+
   Medico({
     this.id,
     this.uid,

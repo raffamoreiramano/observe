@@ -52,6 +52,9 @@ class _SignInState extends State<SignIn> {
           actions: [
             TextButton(
               onPressed: () {
+                setState(() {
+                  _visible = true;
+                });
                 Get.back();
               },
               child: Text(

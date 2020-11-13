@@ -5,6 +5,14 @@ class Receita {
   int id, mid, pid;
   List<Remedio> remedios;
 
+  bool get isEmpty {
+    return toMap().isEmpty;
+  }
+
+  bool get isNotEmpty {
+    return toMap().isNotEmpty;
+  }
+
   Receita({
     this.id,
     this.mid,

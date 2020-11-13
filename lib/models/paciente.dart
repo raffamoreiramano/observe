@@ -5,6 +5,14 @@ class Paciente {
   DateTime nascimento;
   List<dynamic> doencas, alergias, remedios;
 
+  bool get isEmpty {
+    return toMap().isEmpty;
+  }
+  
+  bool get isNotEmpty {
+    return toMap().isNotEmpty;
+  }
+
   Paciente({
     this.id,
     this.uid,

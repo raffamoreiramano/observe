@@ -49,6 +49,9 @@ class _SignUpState extends State<SignUp> {
           actions: [
             TextButton(
               onPressed: () {
+                setState(() {
+                  _visible = true;
+                });
                 Get.back();
               },
               child: Text('Ok')
