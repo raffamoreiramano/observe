@@ -23,121 +23,55 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   bool _visible = false;
   bool _synced = false;
-  Usuario _usuario = Usuario();
-  Medico _medico = Medico();
-  Paciente _paciente = Paciente();
-  String _perfil = '';
-  Preferences _preferences;
+  Usuario _usuario;
   User _user;
+  Preferences _preferences;
 
-  Future storeUsuario(Preferences _preferences, String cid) async {
-    final UsuarioRepository _repo = UsuarioRepository();
+  Future syncUsuario() async {
+    final _repo = UsuarioRepository();
 
-    await _repo.readUsuario(cid: cid)
+    await _repo.readUsuario(cid: _user.uid)
       .then((usuario) async {
         await _preferences.setUsuario(usuario);
-      }).catchError((erro) {
-        _preferences.setUsuario(null);
+      }).catchError((erro) async {
+        await _preferences.clear();
+        context.read<AuthMethods>().signOut();
       });
   }
 
-  Future storeMedico(Preferences _preferences, String cid) async {
-    final MedicoRepository _repo = MedicoRepository();
-
-    await _repo.readMedico(cid: cid)
-      .then((medico) async {
-        await _preferences.setMedico(medico);
-      }).catchError((erro) {
-        _preferences.setMedico(null);
-      });
-  }
-
-  Future storePaciente(Preferences _preferences, String cid) async {
-    final PacienteRepository _repo = PacienteRepository();
-
-    await _repo.readPaciente(cid: cid)
-      .then((paciente) async {
-        await _preferences.setPaciente(paciente);
-      }).catchError((erro) {
-        _preferences.setPaciente(null);
-      });
-  }
-
-  Future syncData() async {
-    _usuario = _preferences.getUsuario();
-
-    if (_usuario.isEmpty) {
-      await storeUsuario(_preferences, _user.uid);
+  Future syncPreferences() async {
+    if (_usuario.isEmpty || _usuario.cid != _user.uid) {
+      await syncUsuario();
     }
 
-    if (_usuario.cid != _user.uid) {
-      _preferences.clear();
-      await storeUsuario(_preferences, _user.uid);
-    }
-    
-    _perfil = _preferences.getPerfil();
-
-    if (_perfil.isEmpty) {
-      _medico = _preferences.getMedico();
-
-      if (_medico.isEmpty) {
-        await storeMedico(_preferences, _user.uid);
-        _medico = _preferences.getMedico();
-      }
-
-      _paciente = _preferences.getPaciente();
-
-      if (_paciente.isEmpty) {
-        await storePaciente(_preferences, _user.uid);
-        _paciente = _preferences.getPaciente();
-      }
-
-      if ((_medico.isEmpty || _paciente.isEmpty) && (_medico.isNotEmpty || _paciente.isNotEmpty)) {
-        _perfil = _preferences.getPerfil();
-        if (_perfil != 'nenhum') {
-          final _tipo = _medico.isNotEmpty ? 'medico' : 'paciente';
-          await _preferences.setPerfil(_tipo);
-        }
-      }
-
-      setState(() {
-        _synced = true;
-        _visible = true;
-      });
-    }
+    _synced = true;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_synced) {
-      syncData();
+      syncPreferences();
     }
+    _visible = true;
   }
 
   @override
   void initState() {
     super.initState();
-    _preferences = context.read<Preferences>();
     _user = context.read<User>();
-
-    _usuario = _preferences.getUsuario();
-    _perfil = _preferences.getPerfil();
-    _visible = true;
+    _usuario = context.read<Preferences>().usuario;
   }
 
   @override
   Widget build(BuildContext context) {
-    _preferences = context.watch<Preferences>();
-    _user = context.watch<User>();
-    _usuario = _preferences.getUsuario();
-    _perfil = _preferences.getPerfil();
+    Perfil _perfil = context.select<Preferences, Perfil>((preferences) => preferences.perfil);
 
     switch (_perfil) {
-      case 'medico':
+      case Perfil.medico:
         return MedicoMainPage();
         break;
-      case 'paciente':
+      case Perfil.paciente:
         return PacienteMainPage();
         break;
       default:
@@ -176,7 +110,7 @@ class _MainPageState extends State<MainPage> {
                         ),
                         child: RawMaterialButton(
                           onPressed: () {
-                            _preferences.setPerfil('medico');
+                            context.read<Preferences>().setPerfil(Perfil.medico);
                           },
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(80)
@@ -226,7 +160,7 @@ class _MainPageState extends State<MainPage> {
                         ),
                         child: RawMaterialButton(
                           onPressed: () {
-                            _preferences.setPerfil('paciente');                            
+                            context.read<Preferences>().setPerfil(Perfil.paciente);
                           },
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(80)
