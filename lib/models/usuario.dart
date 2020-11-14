@@ -17,11 +17,9 @@ class Usuario {
     this.cid,
     this.nome,
     this.sobrenome,
-  }) {
-    this.nome = 'h';
-  }
+  });
 
-  Usuario.fromMap( Map<String, dynamic> data) {
+  Usuario.fromMap(Map<String, dynamic> data) {
     this.id = data['id'];
     this.cid = data['cid'];
     this.nome = data['nome'];
