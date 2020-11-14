@@ -6,6 +6,8 @@ import 'package:observe/models/receita.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum Perfil { usuario, medico, paciente }
+
 class Preferences extends ChangeNotifier {
   final SharedPreferences _preferences;
   Usuario _usuario;
@@ -16,13 +18,43 @@ class Preferences extends ChangeNotifier {
   Paciente get paciente => _paciente;
   List<Receita> _receitas;
   List<Receita> get receitas => _receitas;
+  Perfil _perfil;
+  Perfil get perfil => _perfil;
 
-  Preferences(this._preferences);
+  Preferences(this._preferences) {
+    _usuario = getUsuario();
+    _medico = getMedico();
+    _paciente = getPaciente();
+    _receitas = getReceitas();
+    _perfil = getPerfil();
+  }
 
   Future _setString({String key, dynamic value}) async {
+    if (value is Perfil) {
+      _perfil = value;
+      return await _preferences.setString(key, value.toString()) ? notifyListeners() : false;
+    }
+
     if (value == null || value.isEmpty) {
       return await _preferences.remove(key);
     }
+
+    if (value is Usuario) {
+      _usuario = value;
+    }
+
+    if (value is Medico) {
+      _medico = value;
+    }
+
+    if (value is Paciente) {
+      _paciente = value;
+    }
+
+    if (value is List<Receita>) {
+      _receitas = value;
+    }
+
     
     return await _preferences.setString(key, value.toString()) ? notifyListeners() : false;
   }
@@ -88,15 +120,21 @@ class Preferences extends ChangeNotifier {
     return List<Receita>();
   }
 
-  Future setPerfil(String tipo) async {
+  Future setPerfil(Perfil tipo) async {
     await _setString(key: 'perfil', value: tipo);
   }
 
-  String getPerfil() {
-    return _preferences.getString('perfil') ?? '';
+  Perfil getPerfil() {
+    String tipo = _preferences.getString('perfil') ?? Perfil.usuario.toString();
+    return Perfil.values.singleWhere((element) => element.toString() == tipo, orElse: () => Perfil.usuario);
   }
 
   Future clear() async {
+    _usuario = Usuario();
+    _medico = Medico();
+    _paciente = Paciente();
+    _receitas = List<Receita>.empty();
+    _perfil = Perfil.usuario;
     return await _preferences.clear() ? notifyListeners() : false;
   }
 }

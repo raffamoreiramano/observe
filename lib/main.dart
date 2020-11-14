@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<Preferences>(
+        ChangeNotifierProvider<Preferences>(
           create: (context) => Preferences(_sp),
         ),
         Provider<AuthMethods>(
