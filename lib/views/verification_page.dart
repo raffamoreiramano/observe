@@ -15,7 +15,7 @@ class _VerificationPageState extends State<VerificationPage> {
   bool _visible = false;
 
   Future saveDisplayName() async {
-    final User user = Provider.of<User>(context, listen: false);
+    final User user = context.read<User>();
     final UsuarioRepository repo = UsuarioRepository();
 
     await repo.readUsuario(cid: user.uid)
@@ -44,13 +44,11 @@ class _VerificationPageState extends State<VerificationPage> {
     if (!_visible) {
       load();
     }
-    Provider.of<User>(context, listen: false).reload();
   }
 
   @override
   Widget build(BuildContext context) {
     context.watch<User>().reload();
-
     return Scaffold(
       backgroundColor: ObserveColors.dark,
       body: Center(

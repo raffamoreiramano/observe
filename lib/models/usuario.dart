@@ -4,6 +4,14 @@ class Usuario {
   int id;
   String cid, nome, sobrenome;
 
+  bool get isEmpty {
+    return toMap().isEmpty;
+  }
+
+  bool get isNotEmpty {
+    return toMap().isNotEmpty;
+  }
+
   Usuario({
     this.id,
     this.cid,
@@ -11,7 +19,7 @@ class Usuario {
     this.sobrenome,
   });
 
-  Usuario.fromMap( Map<String, dynamic> data) {
+  Usuario.fromMap(Map<String, dynamic> data) {
     this.id = data['id'];
     this.cid = data['cid'];
     this.nome = data['nome'];

@@ -5,6 +5,14 @@ class Paciente {
   DateTime nascimento;
   List<dynamic> doencas, alergias, remedios;
 
+  bool get isEmpty {
+    return toMap().isEmpty;
+  }
+  
+  bool get isNotEmpty {
+    return toMap().isNotEmpty;
+  }
+
   Paciente({
     this.id,
     this.uid,
@@ -38,13 +46,19 @@ class Paciente {
     final Map<String, dynamic> data = {
       'id': id,
       'uid': uid,
-      'nascimento': nascimento.toIso8601String(),
+      'nascimento': nascimento?.toIso8601String(),
       'doencas': doencas,
       'alergias': alergias,
       'remedios': remedios,
     };
 
-    data.removeWhere((key, value) => value == null);
+    data.removeWhere((key, value) {
+      if (value is List) {
+        return value.isEmpty;
+      }
+
+      return value == null;
+    });
 
     return data;
   }

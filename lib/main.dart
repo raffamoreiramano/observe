@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:observe/helpers/preferences.dart';
-import 'package:observe/repositories/usuario_repository.dart';
 import 'package:observe/services/auth.dart';
 import 'package:observe/views/authentication_page.dart';
 import 'package:observe/views/main_page.dart';
@@ -28,10 +27,10 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<Preferences>(
-          create: (_) => Preferences(_sp),
+          create: (context) => Preferences(_sp),
         ),
         Provider<AuthMethods>(
-          create: (_) => AuthMethods(FirebaseAuth.instance),
+          create: (context) => AuthMethods(FirebaseAuth.instance),
         ),
         StreamProvider<User>(
           create: (context) => context.read<AuthMethods>().authState,
