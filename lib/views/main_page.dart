@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:observe/classes/colors.dart';
+import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
 import 'package:observe/models/medico.dart';
 import 'package:observe/models/paciente.dart';
@@ -12,7 +13,6 @@ import 'package:observe/services/auth.dart';
 import 'package:observe/views/medico/main_page.dart';
 import 'package:observe/widgets/loader.dart';
 import 'package:provider/provider.dart';
-
 import 'paciente/main_page.dart';
 
 class MainPage extends StatefulWidget {
@@ -59,8 +59,9 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    _preferences = context.read<Preferences>();
     _user = context.read<User>();
-    _usuario = context.read<Preferences>().usuario;
+    _usuario = _preferences.usuario;
   }
 
   @override

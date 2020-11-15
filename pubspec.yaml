@@ -24,6 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_svg: ^0.19.1
   get: ^3.15.0
   http: ^0.12.1
   dio: ^3.0.10
@@ -32,6 +33,7 @@ dependencies:
   cloud_firestore: ^0.14.2
   provider: ^4.3.2+2
   shared_preferences: ^0.5.12+4
+  mask_text_input_formatter: ^1.1.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -54,8 +56,12 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - lib/assets/images/observe_emojis/very_sick.svg
+    - lib/assets/images/observe_emojis/sick.svg
+    - lib/assets/images/observe_emojis/neutral.svg
+    - lib/assets/images/observe_emojis/healthy.svg
+    - lib/assets/images/observe_emojis/very_healthy.svg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
