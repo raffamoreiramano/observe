@@ -1,19 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
 import 'package:observe/models/estado_do_paciente.dart';
 import 'package:observe/models/paciente.dart';
+import 'package:observe/models/remedio.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:observe/repositories/paciente_repository.dart';
-import 'package:observe/repositories/usuario_repository.dart';
-import 'package:observe/views/paciente/formulario_perfil.dart';
+import 'package:observe/services/api.dart';
+import 'package:observe/services/auth.dart';
+import 'package:observe/views/paciente/formulario_paciente.dart';
+import 'package:observe/widgets/card_remedio.dart';
+import 'package:observe/widgets/loader.dart';
 import 'package:observe/widgets/retorno_paciente.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'dart:math';
 
 class PacienteMainPage extends StatefulWidget {
   @override
@@ -21,41 +24,128 @@ class PacienteMainPage extends StatefulWidget {
 }
 
 class _PacienteMainPageState extends State<PacienteMainPage> {
-  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _synced = false;
+  bool _visible = false;
 
-  TextEditingController _nascimentoCTRL = TextEditingController();
-  TextEditingController _doencasCTRL = TextEditingController();
-  TextEditingController _alergiasCTRL = TextEditingController();
-  TextEditingController _remediosCTRL = TextEditingController();
+  editarPerfil() {
+    Get.to(
+      FormularioPaciente(
+        usuario: context.read<Preferences>().usuario,
+        paciente: context.read<Preferences>().paciente,
+      )
+    ).then((retorno) {
+      if (retorno is! APIResponse) {
+        Get.showSnackbar(GetBar(
+          backgroundColor: ObserveColors.dark,
+          title: 'Ok',
+          message: 'Fingiremos que nada aconteceu...',
+          duration: Duration(seconds: 2),
+        ));
+      }
+    });
+  }
 
-  MaskTextInputFormatter _nascimentoFormatter = MaskTextInputFormatter(
-    mask: '##/##/####',
-    filter: { "#": RegExp(r'[0-9]') },
-    initialText: '00/00/0000'
-  );
+  trocarPerfil() {
+    context.read<Preferences>().setPerfil(Perfil.usuario);
+  }
 
-  @override
-  void initState() {
-    super.initState();
-    // _nascimentoCTRL.value = TextEditingValue(text: '31/12/1999');
-    initializeDateFormatting('pt_BR', null);
+  desconectar() {
+    Get.dialog(
+      AlertDialog(
+        title: Text('Desconectar...'),
+        content: Text(
+          'Tem certeza que deseja desconectar da sua conta?'
+        ),        
+        actions: [
+          TextButton(
+            onPressed: () {
+              context.read<Preferences>().clear();
+              context.read<AuthMethods>().signOut();
+            },
+            child: Text(
+              'SIM',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+            },
+            child: Text(
+              'NÃO',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      )
+    );
   }
 
   Future verificarPerfil() async {
     final PacienteRepository _repo = PacienteRepository();
 
-    await _repo.readPaciente(cid: context.watch<User>().uid)
+    await _repo.readPaciente(cid: context.read<User>().uid)
       .then((paciente) {
         context.read<Preferences>().setPaciente(paciente);
       }).catchError((erro) {
         context.read<Preferences>().setPaciente();
-      });    
+      });
+
+    setState(() {
+      _synced = true;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_synced) {
+      verificarPerfil();
+    }
+  }
+
+  List<Remedio> _listaTeste = List<Remedio>.generate(10, (index) {
+    var rng = Random();
+    return Remedio(
+      nome: 'Remédio nº ${rng.nextInt(100).toString()}',
+      horario: TimeOfDay(hour: rng.nextInt(24), minute: rng.nextInt(24)),
+      medida: rng.nextBool() ? 'unidade' : 'ml',
+      quantia: (rng.nextDouble() * 10),
+    );
+  });
+
+  @override
+  void initState() {
+    super.initState();
+    _listaTeste.sort((r1, r2) {
+      final int h1 = r1.horario.hour;
+      final int h2 = r2.horario.hour;
+      final int m1 = r1.horario.minute;
+      final int m2 = r2.horario.minute;
+
+      return DateTime(0, 0, 0, h1, m1).compareTo(DateTime(0, 0, 0, h2, m2)) * -1;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     Paciente _paciente = context.select<Preferences, Paciente>((preferences) => preferences.paciente);
     Usuario _usuario = context.select<Preferences, Usuario>((preferences) => preferences.usuario);
+
+    if (!_synced) {
+      return Scaffold(
+        backgroundColor: ObserveColors.dark,
+        body: Container(
+          height: MediaQuery.of(context).size.height,
+          alignment: Alignment.center,
+          child: Loader(),            
+        ),
+      );
+    }
 
     if (_paciente.isEmpty) {
       return FormularioPaciente(usuario: _usuario);
@@ -175,13 +265,13 @@ class _PacienteMainPageState extends State<PacienteMainPage> {
                 onSelected: (Opcoes opcoes) {
                   switch (opcoes) {
                     case Opcoes.config:
-                      print('popup :: Configurações');
+                      editarPerfil();
                       break;
                     case Opcoes.trocar:
-                      print('popup :: Trocar de perfil');
+                      trocarPerfil();
                       break;
                     case Opcoes.sair:
-                      context.read<Preferences>().setPerfil(Perfil.usuario);
+                      desconectar();
                       break;
                   }
                 },
@@ -193,44 +283,14 @@ class _PacienteMainPageState extends State<PacienteMainPage> {
               padding: EdgeInsets.all(10),
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
-              itemCount: 10,
+              itemCount: _listaTeste.length,
               itemBuilder: (context, index) {
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    
-                  ),
-                  child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),                      
-                    ),
-                    title: Text(
-                      'Remedio nº $index',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.normal,
-                        color: Colors.blueGrey,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '10 ml',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w300
-                      ),
-                    ),
-                    trailing: Text(
-                      '17:00',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w100
-                      ),
-                    ),
-                    onTap: () {
-                      
-                    },
-                  ),
+                final remedio = _listaTeste.elementAt(index);
+                return CardRemedio(
+                  remedio,
+                  callback: (bool value) {
+                    remedio.tomado = value;
+                  },
                 );
               },
             ),

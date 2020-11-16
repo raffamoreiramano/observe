@@ -106,6 +106,7 @@ class _SignInState extends State<SignIn> {
                         child: TextFormField(
                           controller: _emailCTRL,
                           decoration: roundedFormInput('Email'),
+                          onEditingComplete: () => FocusScope.of(context).nextFocus(),
                           style: TextStyle(
                             color: Colors.white
                           ),
@@ -132,6 +133,7 @@ class _SignInState extends State<SignIn> {
                             TextFormField(
                               controller: _passwordCTRL,
                               decoration: roundedFormInput('Senha'),
+                              onEditingComplete: () => FocusScope.of(context).nextFocus(),
                               obscureText: _passwordVisibility,
                               style: TextStyle(
                                 color: Colors.white,
@@ -162,8 +164,8 @@ class _SignInState extends State<SignIn> {
                                   },
                                   icon: Icon(
                                     _passwordVisibility 
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                     color: Colors.white38,
                                   ),
                                 ),

@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
-import 'package:observe/models/medico.dart';
-import 'package:observe/models/paciente.dart';
 import 'package:observe/models/usuario.dart';
-import 'package:observe/repositories/medico_repository.dart';
-import 'package:observe/repositories/paciente_repository.dart';
 import 'package:observe/repositories/usuario_repository.dart';
 import 'package:observe/services/auth.dart';
 import 'package:observe/views/medico/main_page.dart';
@@ -199,6 +195,7 @@ class _MainPageState extends State<MainPage> {
                         margin: EdgeInsets.only(top: 30),
                         child: FloatingActionButton(
                           onPressed: () {
+                            context.read<Preferences>().clear();
                             context.read<AuthMethods>().signOut();
                           },
                           elevation: 0,

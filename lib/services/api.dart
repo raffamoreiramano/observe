@@ -62,7 +62,7 @@ class ObserveAPI {
 
   Future<APIResponse> put({String route, int id, String data}) async {
     Response response = await _dio.put(
-      [_path, route, id].join('/'),
+      [_path, route, 'id', id].join('/'),
       options: _options,
       data: data
     );
