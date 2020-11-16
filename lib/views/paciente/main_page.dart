@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:observe/classes/api_response.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
@@ -9,8 +10,9 @@ import 'package:observe/models/paciente.dart';
 import 'package:observe/models/remedio.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:observe/repositories/paciente_repository.dart';
-import 'package:observe/services/api.dart';
 import 'package:observe/services/auth.dart';
+import 'package:observe/views/paciente/alarmes.dart';
+import 'package:observe/views/paciente/ficha_medica.dart';
 import 'package:observe/views/paciente/formulario_paciente.dart';
 import 'package:observe/widgets/card_remedio.dart';
 import 'package:observe/widgets/loader.dart';
@@ -25,7 +27,14 @@ class PacienteMainPage extends StatefulWidget {
 
 class _PacienteMainPageState extends State<PacienteMainPage> {
   bool _synced = false;
-  bool _visible = false;
+
+  fichaMedica() {
+    Get.to(FichaMedica());
+  }
+
+  alarmes() {
+    Get.to(AlarmsPage());
+  }
 
   editarPerfil() {
     Get.to(
@@ -168,7 +177,7 @@ class _PacienteMainPageState extends State<PacienteMainPage> {
                   height: 70,
                   child: RawMaterialButton(
                     onPressed: () {
-
+                      fichaMedica();
                     },
                     padding: EdgeInsets.only(right: 40),                    
                     child: Icon(
@@ -186,11 +195,11 @@ class _PacienteMainPageState extends State<PacienteMainPage> {
                   height: 70,
                   child: RawMaterialButton(
                     onPressed: () {
-
+                      alarmes();
                     },
                     padding: EdgeInsets.only(left: 40),
                     child: Icon(
-                      Icons.assignment_outlined,
+                      Icons.alarm,
                       color: Colors.blueGrey,
                       size: 30,
                     ),
@@ -280,7 +289,12 @@ class _PacienteMainPageState extends State<PacienteMainPage> {
           ),
           SliverToBoxAdapter(
             child: ListView.builder(
-              padding: EdgeInsets.all(10),
+              padding: EdgeInsets.only(
+                top: 10,
+                right: 10,
+                bottom: 130,
+                left: 10,
+              ),
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               itemCount: _listaTeste.length,

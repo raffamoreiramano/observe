@@ -1,24 +1,7 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
+import 'package:observe/classes/api_response.dart';
 
-class APIResponse {
-  final int status;
-  final String data;
 
-  APIResponse({
-    this.status,
-    this.data,
-  });
-
-  @override
-  String toString() {
-    return json.encode({
-      'status': status,
-      'data': data
-    });
-  }
-}
 
 class ObserveAPI {
   final String _path = 'http://localhost:5000/api';

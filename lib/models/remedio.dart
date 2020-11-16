@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
@@ -9,13 +8,8 @@ class Remedio {
   double quantia;
   TimeOfDay horario;
   DateFormat _format = DateFormat('HH:mm');
-  bool _tomado = false;
-  
-  bool get tomado => _tomado;
+  bool tomado = false;
 
-  set tomado(bool value) {
-    _tomado = value;
-  }
 
   bool get isEmpty {
     return toMap().isEmpty;

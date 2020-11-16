@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:observe/classes/api_response.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
@@ -8,7 +9,6 @@ import 'package:observe/models/paciente.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:observe/repositories/paciente_repository.dart';
 import 'package:observe/repositories/usuario_repository.dart';
-import 'package:observe/services/api.dart';
 import 'package:observe/widgets/input_decoration.dart';
 import 'package:observe/widgets/loader.dart';
 import 'package:provider/provider.dart';
