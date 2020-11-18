@@ -1,13 +1,15 @@
 import 'dart:convert';
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
+import 'package:observe/models/item.dart';
 
-class Remedio {
+
+class Remedio extends Item {
   int id;
   String nome, medida, _horario;
   double quantia;
   TimeOfDay horario;
-  DateFormat _format = DateFormat('HH:mm');
   bool tomado = false;
 
 
@@ -20,52 +22,54 @@ class Remedio {
   }
   
   Remedio({
+    this.id,
     this.nome,
     this.medida,
     this.quantia,
     this.horario,
   }) {
+    initializeDateFormatting('pt_BR', null);
+    final DateFormat _format = DateFormat('HH:mm');
+
     _horario = _format.format(DateTime(0, 0, 0, horario.hour, horario.minute));
   }
 
-  Remedio.fromMap(Map<String, dynamic> data) {
-    final DateTime _dateTime = _format.parse(data['horario'].toString());
+  factory Remedio.fromMap(Map<String, dynamic> data) {
+    final DateFormat _format = DateFormat('HH:mm');
+    final DateTime _dateTime = _format.parse(data['horario']);    
 
-    this.nome = data['nome'];
-    this.medida = data['medida'];
-    this.quantia = data['quantia'];
-    this._horario = data['horario'];
-    this.horario = TimeOfDay.fromDateTime(_dateTime);
+    final Remedio remedio = Remedio(
+      id : data['id'],
+      nome : data['nome'],
+      medida : data['medida'],
+      quantia : data['quantia'],
+      horario : TimeOfDay.fromDateTime(_dateTime),
+    );
+
+    return remedio;
   }
 
-  Remedio.fromJson(String data) {
-    final _data = json.decode(data);
-    final DateTime _dateTime = _format.parse(_data['horario']);
+  factory Remedio.fromJson(String data) => Remedio.fromMap(json.decode(data));
 
-    this.nome = _data['nome'];
-    this.medida = _data['medida'];
-    this.quantia = _data['quantia'];
-    this._horario = _data['horario'];
-    this.horario = TimeOfDay.fromDateTime(_dateTime);
-  }
-
-  Map<String, dynamic> toMap() {
-    final Map<String, dynamic> data = {
+  Map<String, dynamic> toMap([bool mostrarTomado = false]) {
+    Map<String, dynamic> data = {
+      'id': id,
       'nome': nome,
       'medida': medida,
       'quantia': quantia,
       'horario': _horario,
+      'tomado': mostrarTomado ? tomado : null,
     };
+
+    data.removeWhere((key, value) {
+      return value == null;
+    });
 
     return data;
   }
 
-  String toJson() {
-    return json.encode(toMap());
-  }
+  String toJson() => json.encode(toMap());
 
   @override
-  String toString() {
-    return toJson();
-  }
+  String toString() => toJson();
 }

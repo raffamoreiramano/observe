@@ -342,6 +342,8 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
                               if (_data.isBefore(DateTime(1900))) {
                                 return 'Informe uma data válida';
                               }
+
+                              return null;
                             },
                             style: TextStyle(
                               fontSize: 18,

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/models/alarme.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:provider/provider.dart';
 
 class CardAlarme extends StatefulWidget {
   final int index;
@@ -20,10 +24,47 @@ class _CardAlarmeState extends State<CardAlarme> {
 
   _CardAlarmeState(this._horas, this._minutos, this._ligado);
 
-  ligar() {
-    setState(() {
-      _ligado = !_ligado;
-    });
+  Future<void> ligar() async {
+    _ligado = !_ligado;
+    if (_ligado) {
+      final agora = tz.TZDateTime.now(tz.getLocation('America/Sao_Paulo'));
+      tz.TZDateTime _data = tz.TZDateTime(tz.getLocation('America/Sao_Paulo'), agora.year, agora.month, agora.day, _horas, _minutos);
+
+      final AndroidNotificationDetails notificationDetails = AndroidNotificationDetails(
+        'Observe Paciente', 'Canal do paciente', 'Notificações locais para o paciente',
+        priority: Priority.max,
+        importance: Importance.max,
+        channelShowBadge: true,
+        enableLights: true,
+        onlyAlertOnce: false,
+        enableVibration: true,
+        fullScreenIntent: true,
+        playSound: true,
+        ticker: 'ticker',
+        ongoing: true,
+        showWhen: true,
+        category: 'alarm',
+        sound: RawResourceAndroidNotificationSound('cradles_medium'),
+      );
+
+      await context.read<FlutterLocalNotificationsPlugin>().zonedSchedule(
+        widget.alarme.id, widget.alarme.titulo, widget.alarme.texto, _data, NotificationDetails(android: notificationDetails), 
+        androidAllowWhileIdle: true,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+        payload: 'Teste',              
+      ).then((_) => setState(() {
+        _ligado = true;
+      })).catchError((erro) => print(erro.toString()));
+    } else {
+      context.read<FlutterLocalNotificationsPlugin>().cancel(
+        widget.alarme.id
+      ).then((_) => setState(() {
+        _ligado = false;
+      })).catchError((erro) => print(erro.toString()));
+    }
+
+    return;
   }
 
   @override
