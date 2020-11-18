@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:observe/helpers/preferences.dart';
 import 'package:observe/services/auth.dart';
@@ -9,11 +10,38 @@ import 'package:observe/views/main_page.dart';
 import 'package:observe/views/verification_page.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
+FlutterLocalNotificationsPlugin notifications = FlutterLocalNotificationsPlugin();
+
+
+// Function(ObserveNotification notification) onSelectNotification;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_launcher');
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid
+  );
+
+  tz.initializeTimeZones();
+
+
+  await notifications.initialize(
+    initializationSettings,
+    onSelectNotification: (String payload) async {
+      if (payload != null) {
+        print('notification payload: $payload');
+      }
+    },
+  );
+
   await Firebase.initializeApp();
+  
   final SharedPreferences preferences = await SharedPreferences.getInstance();
+
   runApp(MyApp(preferences));
 }
 
@@ -32,23 +60,29 @@ class MyApp extends StatelessWidget {
         Provider<AuthMethods>(
           create: (context) => AuthMethods(FirebaseAuth.instance),
         ),
+        Provider<FlutterLocalNotificationsPlugin>(
+          create: (context) => notifications,
+        ),
         StreamProvider<User>(
           create: (context) => context.read<AuthMethods>().authState,
         ),
       ],
       child: GetMaterialApp(
-        debugShowCheckedModeBanner: false,
+        // debugShowCheckedModeBanner: false,
         title: 'Observe',
         home: AuthenticationWrapper(),
-        theme: ThemeData(
-          // brightness: Brightness.dark,
-        ),
       ),
     );
   }
 }
 
 class AuthenticationWrapper extends StatelessWidget {
+  // AuthenticationWrapper() {
+  //   onSelectNotification = (notification) {
+  //     Get.to(AlarmsPage());
+  //   };
+  // }
+
   @override
   Widget build(BuildContext context) {
     final User user = Provider.of<User>(context);

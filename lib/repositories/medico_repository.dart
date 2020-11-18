@@ -1,3 +1,4 @@
+import 'package:observe/classes/api_response.dart';
 import 'package:observe/models/medico.dart';
 import 'package:observe/services/api.dart';
 

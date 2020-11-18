@@ -3,7 +3,7 @@ import 'dart:convert';
 class Paciente {
   int id, uid;
   DateTime nascimento;
-  List<dynamic> doencas, alergias, remedios;
+  List<String> doencas, alergias, remedios;
 
   bool get isEmpty {
     return toMap().isEmpty;
@@ -26,9 +26,9 @@ class Paciente {
     this.id = data['id'];
     this.uid = data['cid'];
     this.nascimento = DateTime.parse(data['nascimento']);
-    this.doencas = data['doencas'];
-    this.alergias = data['alergias'];
-    this.remedios = data['remedios'];
+    this.doencas = List<String>.from(data['doencas']);
+    this.alergias = List<String>.from(data['alergias']);
+    this.remedios = List<String>.from(data['remedios']);
   }
 
   Paciente.fromJson(String data) {
@@ -37,9 +37,9 @@ class Paciente {
     this.id = _data['id'];
     this.uid = _data['uid'];
     this.nascimento = DateTime.parse(_data['nascimento']);
-    this.doencas = _data['doencas'];
-    this.alergias = _data['alergias'];
-    this.remedios = _data['remedios'];
+    this.doencas = List<String>.from(_data['doencas']);
+    this.alergias = List<String>.from(_data['alergias']);
+    this.remedios = List<String>.from(_data['remedios']);
   }
 
   Map<String, dynamic> toMap() {

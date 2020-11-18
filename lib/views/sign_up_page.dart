@@ -90,6 +90,8 @@ class _SignUpState extends State<SignUp> {
                         child: TextFormField(
                           controller: _nameCTRL,
                           keyboardType: TextInputType.name,
+                          textCapitalization: TextCapitalization.words,
+                          onEditingComplete: () => FocusScope.of(context).nextFocus(),
                           decoration: roundedFormInput('Nome'),
                           style: TextStyle(
                             color: Colors.white,
@@ -115,6 +117,8 @@ class _SignUpState extends State<SignUp> {
                         child: TextFormField(
                           controller: _lastnameCTRL,
                           keyboardType: TextInputType.name,
+                          textCapitalization: TextCapitalization.words,
+                          onEditingComplete: () => FocusScope.of(context).nextFocus(),
                           decoration: roundedFormInput('Sobreome'),
                           style: TextStyle(
                             color: Colors.white,
@@ -140,6 +144,8 @@ class _SignUpState extends State<SignUp> {
                         child: TextFormField(
                           controller: _emailCTRL,
                           decoration: roundedFormInput('Email'),
+                          keyboardType: TextInputType.emailAddress,
+                          onEditingComplete: () => FocusScope.of(context).nextFocus(),
                           style: TextStyle(
                             color: Colors.white,
                           ),
@@ -166,6 +172,7 @@ class _SignUpState extends State<SignUp> {
                             TextFormField(
                               controller: _passwordCTRL,
                               decoration: roundedFormInput('Senha'),
+                              onEditingComplete: () => FocusScope.of(context).nextFocus(),
                               obscureText: _passwordVisibility,
                               style: TextStyle(
                                 color: Colors.white,
@@ -196,8 +203,8 @@ class _SignUpState extends State<SignUp> {
                                   },
                                   icon: Icon(
                                     _passwordVisibility 
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                     color: Colors.white38,
                                   ),
                                 ),
@@ -216,6 +223,7 @@ class _SignUpState extends State<SignUp> {
                             TextFormField(
                               controller: _vpasswordCTRL,
                               decoration: roundedFormInput('Confirmar senha'),
+                              onEditingComplete: () => FocusScope.of(context).nextFocus(),
                               obscureText: _vpasswordVisibility,
                               style: TextStyle(
                                 color: Colors.white,
@@ -242,8 +250,8 @@ class _SignUpState extends State<SignUp> {
                                   },
                                   icon: Icon(
                                     _vpasswordVisibility 
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                     color: Colors.white38,
                                   ),
                                 ),

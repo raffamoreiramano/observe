@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:observe/classes/colors.dart';
+import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
 import 'package:observe/models/medico.dart';
 import 'package:observe/models/usuario.dart';
@@ -10,7 +11,6 @@ class MedicoMainPage extends StatefulWidget {
   _MedicoMainPageState createState() => _MedicoMainPageState();
 }
 
-enum Opcoes { config, trocar, sair }
 class _MedicoMainPageState extends State<MedicoMainPage> {
   @override
   Widget build(BuildContext context) {

@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:observe/classes/enums.dart';
 import 'package:observe/models/medico.dart';
 import 'package:observe/models/paciente.dart';
 import 'package:observe/models/receita.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-enum Perfil { usuario, medico, paciente }
 
 class Preferences extends ChangeNotifier {
   final SharedPreferences _preferences;
@@ -72,7 +71,7 @@ class Preferences extends ChangeNotifier {
     return usuario.isEmpty ? Usuario() : Usuario.fromJson(usuario);
   }
 
-  Future setMedico(Medico medico) async {
+  Future setMedico([Medico medico]) async {
     await _setString(key: 'medico', value: medico);
   }
 
@@ -86,7 +85,7 @@ class Preferences extends ChangeNotifier {
     return medico.isEmpty ? Medico() : Medico.fromJson(medico);
   }
 
-  Future setPaciente(Paciente paciente) async {
+  Future setPaciente([Paciente paciente]) async {
     await _setString(key: 'paciente', value: paciente);
   }
 
@@ -100,7 +99,7 @@ class Preferences extends ChangeNotifier {
     return paciente.isEmpty ? Paciente() : Paciente.fromJson(paciente);
   }
 
-  Future setReceitas(List<Receita> receitas) async {
+  Future setReceitas([List<Receita> receitas]) async {
     List<String> _receitas = receitas?.map((receita) => receita.toString())?.toList() ?? List<String>.empty();
 
     if (_receitas.isEmpty) {
@@ -120,8 +119,8 @@ class Preferences extends ChangeNotifier {
     return List<Receita>();
   }
 
-  Future setPerfil(Perfil tipo) async {
-    await _setString(key: 'perfil', value: tipo);
+  Future setPerfil([Perfil tipo]) async {
+    await _setString(key: 'perfil', value: tipo ?? Perfil.usuario);
   }
 
   Perfil getPerfil() {

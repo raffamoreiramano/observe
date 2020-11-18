@@ -1,3 +1,4 @@
+import 'package:observe/classes/api_response.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:observe/services/api.dart';
 
@@ -44,7 +45,7 @@ class UsuarioRepository {
 
   Future<Usuario> updateUsuario({int id, Usuario data}) async {
     try {
-      APIResponse response = await _api.put(route: '$_route\/id', id: id, data: data.toString());
+      APIResponse response = await _api.put(route: _route, id: id, data: data.toString());
 
       if (response.status != 204) {
         throw response;
