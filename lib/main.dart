@@ -15,9 +15,6 @@ import 'package:timezone/timezone.dart' as tz;
 
 FlutterLocalNotificationsPlugin notifications = FlutterLocalNotificationsPlugin();
 
-
-// Function(ObserveNotification notification) onSelectNotification;
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
