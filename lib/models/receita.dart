@@ -5,13 +5,9 @@ class Receita {
   int id, mid, pid;
   List<Remedio> remedios;
 
-  bool get isEmpty {
-    return toMap().isEmpty;
-  }
+  bool get isEmpty => toMap().isEmpty;
 
-  bool get isNotEmpty {
-    return toMap().isNotEmpty;
-  }
+  bool get isNotEmpty => !isEmpty;
 
   Receita({
     this.id,
@@ -20,31 +16,23 @@ class Receita {
     this.remedios,
   });
 
-  Receita.fromMap(Map<String, dynamic> data) {
+  factory Receita.fromMap(Map<String, dynamic> data) {
     final List<Remedio> _remedios = 
       List.from(data['remedios'])
       .map((remedio) => Remedio.fromMap(remedio))
       .toList();
 
-    this.id = data['id'];
-    this.mid = data['mid'];
-    this.pid = data['pid'];
-    this.remedios = _remedios;
+    final Receita receita = Receita(
+      id: data['id'],
+      mid: data['mid'],
+      pid: data['pid'],
+      remedios: _remedios
+    );
+
+    return receita;
   }
 
-  Receita.fromJson(String data) {
-    final _data = json.decode(data);
-
-    final _remedios = 
-      List.from(_data['remedios'])
-      .map((remedio) => Remedio.fromMap(remedio))
-      .toList();
-
-    this.id = _data['id'];
-    this.mid = _data['mid'];
-    this.pid = _data['pid'];
-    this.remedios = _remedios;
-  }
+  factory Receita.fromJson(String data) => Receita.fromMap(json.decode(data));
 
   Map<String, dynamic> toMap() {
     final _remedios = remedios.map((remedio) => remedio.toMap()).toList();
@@ -61,12 +49,58 @@ class Receita {
     return data;
   }
 
-  String toJson() {
-    return json.encode(toMap());
-  }
+  String toJson() => json.encode(toMap());
 
   @override
-  String toString() {
-    return toJson();
+  String toString() => toJson();
+}
+
+class ReceitaCollection {
+  int id, mid, pid;
+  String medico, paciente;
+  double estado;
+
+  bool get isEmpty => toMap().isEmpty;
+
+  bool get isNotEmpty => !isEmpty;
+
+  ReceitaCollection({
+    this.id,
+    this.mid,
+    this.pid,
+    this.medico,
+    this.paciente,
+    this.estado,
+  });
+
+  factory ReceitaCollection.fromMap(Map<String, dynamic> data) => ReceitaCollection(
+    id: data['id'],
+    mid: data['mid'],
+    pid: data['pid'],
+    medico: data['medico'],
+    paciente: data['paciente'],
+    estado: data['estado'],
+  );
+
+  factory ReceitaCollection.fromJson(String data) => ReceitaCollection.fromMap(json.decode(data));
+
+  Map<String, dynamic> toMap() {
+    final Map<String, dynamic> data = {
+      'id': id,
+      'mid': mid,
+      'pid': pid,
+      'medico': medico,
+      'paciente': paciente,
+      'estado': estado,
+    };
+
+    data.removeWhere((key, value) => value == null);
+
+    return data;
   }
+
+  String toJson() => json.encode(toMap());
+
+  @override
+  String toString() => toJson();
 }
