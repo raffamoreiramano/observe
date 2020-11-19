@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:observe/classes/api_response.dart';
@@ -6,10 +7,14 @@ import 'package:observe/classes/enums.dart';
 import 'package:observe/classes/tabelas.dart';
 import 'package:observe/helpers/database.dart';
 import 'package:observe/helpers/preferences.dart';
+import 'package:observe/models/alarme.dart';
 import 'package:observe/models/estado_do_paciente.dart';
 import 'package:observe/models/paciente.dart';
+import 'package:observe/models/receita.dart';
 import 'package:observe/models/usuario.dart';
+import 'package:observe/repositories/receita_repository.dart';
 import 'package:observe/services/auth.dart';
+import 'package:observe/services/messenger.dart';
 import 'package:observe/views/paciente/alarmes_page.dart';
 import 'package:observe/views/paciente/ficha_medica.dart';
 import 'package:observe/views/paciente/formulario_paciente.dart';
@@ -33,6 +38,9 @@ class _RemediosPageState extends State<RemediosPage> {
   final Usuario _usuario;
   final Paciente _paciente;
   final _db = LocalDatabase();
+  final messenger = CloudMessenger();
+  final GlobalKey<State> _futureKey = GlobalKey<State>();
+  bool _visible = true;
 
   _RemediosPageState(this._usuario, this._paciente);
 
@@ -119,6 +127,133 @@ class _RemediosPageState extends State<RemediosPage> {
         ],
       )
     );
+  }
+
+  salvarReceita(Receita receita) async {
+    await _db.defineTable(TabelaRemedio());
+
+    await _db.clear();
+
+    List<Remedio> remedios = receita.remedios;
+    
+    remedios.map((remedio) async {
+      remedio.id = remedios.indexOf(remedio);
+      await _db.create(remedio);
+    });
+
+    List<Alarme> alarmes = remedios.map((remedio) {
+      return Alarme(
+        id: remedios.indexOf(remedio),
+        ligado: false,
+        remedio: remedio
+      );
+    }).toList();
+
+    await _db.defineTable(TabelaAlarme());
+
+    await _db.clear();
+
+    alarmes.map((alarme) async {
+      await _db.create(alarme);
+    });
+
+    setState(() {
+      _visible = true;
+    });
+
+    _futureKey.currentState.reassemble();
+  }
+
+  fetchAPI(int rid) async {
+    final ReceitaRepository _repo = ReceitaRepository();
+
+    await _repo.readReceita(rid)
+      .then((receita) {
+        salvarReceita(receita);
+      }).catchError((erro) {
+        print(erro);
+      });
+  }
+
+  confirmarReceira(int rid) {
+    Get.dialog(
+      AlertDialog(
+        title: Text('Nova receita recebida!'),
+        content: Text(
+          'Ao confirmar o recebimento da receita '
+          'o aplicativo irá gerar uma nova lista '
+          'de remédios e alarmes de acordo com a lista da receita.'
+          '\n\n'
+          'Deseja confirmar?'
+        ),        
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _visible = false;
+              });
+
+              fetchAPI(rid);
+
+              Get.back();
+            },
+            child: Text(
+              'SIM',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+            },
+            child: Text(
+              'NÃO',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    messenger.initialize(
+      onMessage: (notification) async {
+        if (notification.type == 'receita') {
+          final payload = json.decode(notification.payload);
+
+          return await confirmarReceira(payload['rid']);
+        }
+
+        return null;
+      },
+      onLaunch: (notification) async {
+        if (notification.type == 'receita') {
+          final payload = json.decode(notification.payload);
+
+          return await confirmarReceira(payload['rid']);
+        }
+
+        return null;
+      },
+      onResume: (notification) async {
+        if (notification.type == 'receita') {
+          final payload = json.decode(notification.payload);
+
+          return await confirmarReceira(payload['rid']);
+        }
+
+        return null;
+      },
+    );
+
+    messenger.salvarTokenMedico(_paciente.id);
   }
   
   @override
@@ -251,53 +386,62 @@ class _RemediosPageState extends State<RemediosPage> {
             ],
           ),
           SliverToBoxAdapter(
-            child:  FutureBuilder<List<Remedio>>(
-              future: fetchDatabase(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<Remedio> _lista = snapshot.data;
+            child:  Visibility(
+              visible: _visible,
+              replacement: Container(
+                height: MediaQuery.of(context).size.height - 160,
+                alignment: Alignment.center,
+                child: Loader(),            
+              ),
+              child: FutureBuilder<List<Remedio>>(
+                key: _futureKey,
+                future: fetchDatabase(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    List<Remedio> _lista = snapshot.data;
 
-                  if (_lista.isNotEmpty) {
-                    return ListView.builder(
-                      padding: EdgeInsets.only(
-                        top: 10,
-                        right: 10,
-                        bottom: 130,
-                        left: 10,
+                    if (_lista.isNotEmpty) {
+                      return ListView.builder(
+                        padding: EdgeInsets.only(
+                          top: 10,
+                          right: 10,
+                          bottom: 130,
+                          left: 10,
+                        ),
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: _lista.length,              
+                        itemBuilder: (context, index) {
+                          return CardRemedio(
+                            _lista[index],
+                            callback: (bool value) {
+                              _lista[index].tomado = value;
+                            },
+                          );
+                        },
+                      );
+                    }
+
+                    return Padding(
+                      padding: EdgeInsets.all(50),
+                      child: Text(
+                        'Parece que você ainda não tem nenhuma receita disponível...'
+                        '\n\n'
+                        'Solicite ao seu médico que mande a receita para o seu ID!',
+                        style: TextStyle(
+                          color: Colors.blueGrey,
+                        ),
                       ),
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: _lista.length,              
-                      itemBuilder: (context, index) {
-                        return CardRemedio(
-                          _lista[index],
-                          callback: (bool value) {
-                            _lista[index].tomado = value;
-                          },
-                        );
-                      },
+                    );
+                  } else {
+                    return Container(
+                      height: MediaQuery.of(context).size.height - 160,
+                      alignment: Alignment.center,
+                      child: Loader(),            
                     );
                   }
-
-                  return Padding(
-                    padding: EdgeInsets.all(50),
-                    child: Text(
-                      'Parece que você ainda não tem nenhuma receita disponível...'
-                      '\n\n'
-                      'Solicite ao seu médico que mande a receita para o seu ID!',
-                      style: TextStyle(
-                        color: Colors.blueGrey,
-                      ),
-                    ),
-                  );
-                } else {
-                  return Container(
-                    height: MediaQuery.of(context).size.height - 160,
-                    alignment: Alignment.center,
-                    child: Loader(),            
-                  );
-                }
-              },
+                },
+              ),
             ),
           ),
         ],
