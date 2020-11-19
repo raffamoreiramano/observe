@@ -4,38 +4,31 @@ import 'package:get/get.dart';
 import 'package:observe/classes/api_response.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
-import 'package:observe/classes/tabela_alarme.dart';
-import 'package:observe/classes/tabela_remedio.dart';
+import 'package:observe/classes/tabela_tratamento.dart';
 import 'package:observe/helpers/database.dart';
 import 'package:observe/helpers/preferences.dart';
-import 'package:observe/models/alarme.dart';
-import 'package:observe/models/estado_do_paciente.dart';
 import 'package:observe/models/paciente.dart';
-import 'package:observe/models/receita.dart';
+import 'package:observe/models/tratamento.dart';
 import 'package:observe/models/usuario.dart';
-import 'package:observe/repositories/receita_repository.dart';
 import 'package:observe/services/auth.dart';
 import 'package:observe/services/messenger.dart';
-import 'package:observe/views/paciente/alarmes_page.dart';
-import 'package:observe/views/paciente/ficha_medica.dart';
-import 'package:observe/views/paciente/formulario_paciente.dart';
-import 'package:observe/widgets/card_remedio.dart';
+import 'package:observe/views/medico/formulario_medico.dart';
+import 'package:observe/widgets/card_tratamento.dart';
 import 'package:observe/widgets/loader.dart';
-import 'package:observe/widgets/retorno_paciente.dart';
 import 'package:provider/provider.dart';
-import 'package:observe/models/remedio.dart';
+import 'package:observe/views/paciente/ficha_medica.dart';
 
-class RemediosPage extends StatefulWidget {
+class TratamentosPage extends StatefulWidget {
   final Usuario usuario;
   final Paciente paciente;
   
-  RemediosPage({this.usuario, this.paciente});
+  TratamentosPage({this.usuario, this.paciente});
 
   @override
-  _RemediosPageState createState() => _RemediosPageState(usuario, paciente);
+  _TratamentosPageState createState() => _TratamentosPageState(usuario, paciente);
 }
 
-class _RemediosPageState extends State<RemediosPage> {
+class _TratamentosPageState extends State<TratamentosPage> {
   final Usuario _usuario;
   final Paciente _paciente;
   final _db = LocalDatabase();
@@ -43,22 +36,20 @@ class _RemediosPageState extends State<RemediosPage> {
   final GlobalKey<State> _futureKey = GlobalKey<State>();
   bool _visible = true;
 
-  _RemediosPageState(this._usuario, this._paciente);
+  _TratamentosPageState(this._usuario, this._paciente);
 
-  Future<List<Remedio>> fetchDatabase() async {
-    List<Remedio> _lista = List<Remedio>.empty();
+  Future<List<Tratamento>> fetchDatabase() async {
+    List<Tratamento> _lista = List<Tratamento>.empty();
 
-    await _db.defineTable(TabelaRemedio());
+    await _db.defineTable(TabelaTratamento());
 
     _lista = await _db.read();
     
-    _lista.sort((r1, r2) {
-      final int h1 = r1.horario.hour;
-      final int h2 = r2.horario.hour;
-      final int m1 = r1.horario.minute;
-      final int m2 = r2.horario.minute;
+    _lista.sort((t1, t2) {
+      final DateTime h1 = t1.retorno;
+      final DateTime h2 = t2.retorno;
 
-      return DateTime(0, 0, 0, h1, m1).compareTo(DateTime(0, 0, 0, h2, m2)) * -1;
+      return h1.compareTo(h2) * -1;
     });
 
     return _lista;
@@ -68,15 +59,11 @@ class _RemediosPageState extends State<RemediosPage> {
     Get.to(FichaMedica());
   }
 
-  alarmes() {
-    Get.to(AlarmsPage());
-  }
-
   editarPerfil() {
     Get.to(
-      FormularioPaciente(
+      FormularioMedico(
         usuario: context.read<Preferences>().usuario,
-        paciente: context.read<Preferences>().paciente,
+        medico: context.read<Preferences>().medico,
       )
     ).then((retorno) {
       if (retorno is! APIResponse) {
@@ -130,21 +117,22 @@ class _RemediosPageState extends State<RemediosPage> {
     );
   }
 
+/*
   salvarReceita(Receita receita) async {
     await _db.defineTable(TabelaRemedio());
 
     await _db.clear();
 
-    List<Remedio> remedios = receita.remedios;
+    List<Remedio> receitas = receita.Receitas;
     
-    remedios.map((remedio) async {
-      remedio.id = remedios.indexOf(remedio);
+    receitas.map((remedio) async {
+      remedio.id = receitas.indexOf(remedio);
       await _db.create(remedio);
     });
 
-    List<Alarme> alarmes = remedios.map((remedio) {
+    List<Alarme> alarmes = receitas.map((remedio) {
       return Alarme(
-        id: remedios.indexOf(remedio),
+        id: Receitas.indexOf(remedio),
         ligado: false,
         remedio: remedio
       );
@@ -220,6 +208,7 @@ class _RemediosPageState extends State<RemediosPage> {
       ),
     );
   }
+*/
 
   @override
   void initState() {
@@ -229,7 +218,7 @@ class _RemediosPageState extends State<RemediosPage> {
         if (notification.type == 'receita') {
           final payload = json.decode(notification.payload);
 
-          return await confirmarReceita(payload['rid']);
+          // return await confirmarReceita(payload['rid']);
         }
 
         return null;
@@ -238,7 +227,7 @@ class _RemediosPageState extends State<RemediosPage> {
         if (notification.type == 'receita') {
           final payload = json.decode(notification.payload);
 
-          return await confirmarReceita(payload['rid']);
+          // return await confirmarReceita(payload['rid']);
         }
 
         return null;
@@ -247,7 +236,7 @@ class _RemediosPageState extends State<RemediosPage> {
         if (notification.type == 'receita') {
           final payload = json.decode(notification.payload);
 
-          return await confirmarReceita(payload['rid']);
+          // return await confirmarReceita(payload['rid']);
         }
 
         return null;
@@ -261,60 +250,11 @@ class _RemediosPageState extends State<RemediosPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      bottomNavigationBar: BottomAppBar(
-        clipBehavior: Clip.hardEdge,
-        notchMargin: 5,
-        shape: CircularNotchedRectangle(),
-        child: Container(
-          height: 70,
-          width: MediaQuery.of(context).size.width,
-          child: Row(            
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Expanded(
-                child: Container(
-                  height: 70,
-                  child: RawMaterialButton(
-                    onPressed: () {
-                      fichaMedica();
-                    },
-                    padding: EdgeInsets.only(right: 40),                    
-                    child: Icon(
-                      Icons.assignment_outlined,
-                      color: Colors.blueGrey,
-                      size: 30,
-                    ),
-                    highlightColor: ObserveColors.aqua[30],
-                    splashColor: ObserveColors.aqua[30],
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  height: 70,
-                  child: RawMaterialButton(
-                    onPressed: () {
-                      alarmes();
-                    },
-                    padding: EdgeInsets.only(left: 40),
-                    child: Icon(
-                      Icons.alarm,
-                      color: Colors.blueGrey,
-                      size: 30,
-                    ),
-                    highlightColor: ObserveColors.aqua[30],
-                    splashColor: ObserveColors.aqua[30],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: ChangeNotifierProvider<EstadoNotifier>(
-        create: (context) => EstadoNotifier(),
-        child: BotaoRetorno(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+
+        },
+        child: Icon(Icons.add_circle_outline_outlined),
       ),
       body: CustomScrollView(
         slivers: [
@@ -394,12 +334,12 @@ class _RemediosPageState extends State<RemediosPage> {
                 alignment: Alignment.center,
                 child: Loader(),            
               ),
-              child: FutureBuilder<List<Remedio>>(
+              child: FutureBuilder<List<Tratamento>>(
                 key: _futureKey,
                 future: fetchDatabase(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    List<Remedio> _lista = snapshot.data;
+                    List<Tratamento> _lista = snapshot.data;
 
                     if (_lista.isNotEmpty) {
                       return ListView.builder(
@@ -413,12 +353,7 @@ class _RemediosPageState extends State<RemediosPage> {
                         physics: NeverScrollableScrollPhysics(),
                         itemCount: _lista.length,              
                         itemBuilder: (context, index) {
-                          return CardRemedio(
-                            _lista[index],
-                            callback: (bool value) {
-                              _lista[index].tomado = value;
-                            },
-                          );
+                          return CardTratamento();
                         },
                       );
                     }

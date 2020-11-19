@@ -1,4 +1,4 @@
-import 'package:observe/classes/tabelas.dart';
+import 'package:observe/classes/tabela_abstract.dart';
 import 'package:observe/models/item.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/sqlite_api.dart';

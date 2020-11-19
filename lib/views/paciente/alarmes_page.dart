@@ -1,4 +1,4 @@
-import 'package:observe/classes/tabelas.dart';
+import 'package:observe/classes/tabela_alarme.dart';
 import 'package:observe/helpers/database.dart';
 import 'package:observe/models/alarme.dart';
 import 'package:observe/widgets/card_alarme.dart';

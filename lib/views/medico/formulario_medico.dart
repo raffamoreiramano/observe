@@ -1,54 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:observe/classes/api_response.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
-import 'package:observe/models/paciente.dart';
+import 'package:observe/models/medico.dart';
 import 'package:observe/models/usuario.dart';
-import 'package:observe/repositories/paciente_repository.dart';
+import 'package:observe/repositories/medico_repository.dart';
 import 'package:observe/repositories/usuario_repository.dart';
 import 'package:observe/widgets/input_decoration.dart';
 import 'package:observe/widgets/loader.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 
 
-class FormularioPaciente extends StatefulWidget {
+class FormularioMedico extends StatefulWidget {
   final Usuario usuario;
-  final Paciente paciente;
+  final Medico medico;
 
-  FormularioPaciente({this.usuario, this.paciente});
+  FormularioMedico({this.usuario, this.medico});
 
   @override
-  _FormularioPacienteState createState() => _FormularioPacienteState(usuario, paciente);
+  _FormularioMedicoState createState() => _FormularioMedicoState(usuario, medico);
 }
 
-class _FormularioPacienteState extends State<FormularioPaciente> {
+class _FormularioMedicoState extends State<FormularioMedico> {
   Usuario _usuario;
-  Paciente _paciente;
+  Medico _medico;
   bool _visible = false;
   final bool _novo;
-  final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
-  _FormularioPacienteState(this._usuario, this._paciente) : _novo = _paciente == null ? true : false;
+  _FormularioMedicoState(this._usuario, this._medico) : _novo = _medico == null ? true : false;
 
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   TextEditingController _nomeCTRL = TextEditingController();
   TextEditingController _sobrenomeCTRL = TextEditingController();
-  TextEditingController _nascimentoCTRL = TextEditingController();
-  TextEditingController _doencasCTRL = TextEditingController();
-  TextEditingController _alergiasCTRL = TextEditingController();
-  TextEditingController _remediosCTRL = TextEditingController();
-
-  MaskTextInputFormatter _nascimentoFormatter = MaskTextInputFormatter(
-    mask: '##/##/####',
-    filter: { "#": RegExp(r'[0-9]') },
-    initialText: '00/00/0000'
-  );
+  TextEditingController _crmCTRL = TextEditingController();
   
   @override
   void initState() {
@@ -56,14 +44,9 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
 
     initializeDateFormatting('pt_BR', null);
 
-    final _data = _paciente?.nascimento ?? DateTime(1999, 12, 31);
-
     _nomeCTRL.value = TextEditingValue(text: _usuario.nome);
     _sobrenomeCTRL.value = TextEditingValue(text: _usuario.sobrenome);
-    _nascimentoCTRL.value = TextEditingValue(text: _dateFormat .format(_data));
-    _doencasCTRL.value = TextEditingValue(text: _paciente?.doencas?.join(', ') ?? '');
-    _alergiasCTRL.value = TextEditingValue(text: _paciente?.alergias?.join(', ') ?? '');
-    _remediosCTRL.value = TextEditingValue(text: _paciente?.remedios?.join(', ') ?? '');
+    _crmCTRL.value = TextEditingValue(text: _medico?.crm ?? '');
     
     _visible = true;
   }
@@ -99,25 +82,19 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
   }
 
   Future enviar() async {
-    List<String> doencas = _doencasCTRL.text.split(',').map((e) => e.trim()).toList();
-    List<String> alergias = _alergiasCTRL.text.split(',').map((e) => e.trim()).toList();
-    List<String> remedios = _remediosCTRL.text.split(',').map((e) => e.trim()).toList();
 
-    Paciente paciente = Paciente(
-      id: _novo ? null : _paciente.id,
+    Medico medico = Medico(
+      id: _novo ? null : _medico.id,
       uid: _usuario.id,
-      nascimento: _novo ? _dateFormat.parse(_nascimentoCTRL.text.trim()) : null,
-      doencas: doencas.isEmpty ? null : doencas,
-      alergias: alergias.isEmpty ? null : alergias,
-      remedios: remedios.isEmpty ? null : remedios,
+      crm: _novo ? _crmCTRL.text.trim() : null,
     );
 
     if (_novo) {
-      final _repo = PacienteRepository();
+      final _repo = MedicoRepository();
 
-      await _repo.createPaciente(paciente)
-        .then((paciente) {
-          context.read<Preferences>().setPaciente(paciente);
+      await _repo.createMedico(medico)
+        .then((medico) {
+          context.read<Preferences>().setMedico(medico);
         }).catchError((erro) {
           alerta(erro);
         });
@@ -130,7 +107,6 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
     }
 
     final _usuarioRepo = UsuarioRepository();
-    final _pacienteRepo = PacienteRepository();
 
     Usuario usuario = Usuario(
       id: _usuario.id,
@@ -144,13 +120,6 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
     await _usuarioRepo.updateUsuario(id: _usuario.id, data: usuario)
       .then((value) {
         context.read<Preferences>().setUsuario(value);
-      }).catchError((erro) {
-        _erro = erro is APIResponse ? erro : APIResponse(status: 500, data: 'Problema desconhecido');
-      });
-
-    await _pacienteRepo.updatePaciente(id: _paciente.id, data: paciente)
-      .then((value) {
-        context.read<Preferences>().setPaciente(value);
       }).catchError((erro) {
         _erro = erro is APIResponse ? erro : APIResponse(status: 500, data: 'Problema desconhecido');
       });
@@ -186,10 +155,10 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
               leading: Container(
                 margin: EdgeInsets.only(left: 15),
                 child: CircleAvatar(
-                  backgroundColor: ObserveColors.aqua[30],
-                  foregroundColor: ObserveColors.aqua,
+                  backgroundColor: ObserveColors.orange[30],
+                  foregroundColor: ObserveColors.orange,
                   child: Icon(
-                    Icons.person_rounded,
+                    Icons.healing_rounded,
                     size: 30,
                   ),
                 ),
@@ -312,131 +281,26 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
                           child: TextFormField(
                             enabled: _novo,
                             readOnly: !_novo,
-                            controller: _novo ? _nascimentoCTRL : null,
-                            initialValue: _novo ? null : _nascimentoCTRL.text,
-                            keyboardType: TextInputType.datetime,
-                            onEditingComplete: () => FocusScope.of(context).nextFocus(),
-                            inputFormatters: _novo ? [_nascimentoFormatter] : null,
-                            validator: (value) {
-                              if (!_novo) {
-                                return null;
-                              }
-
-                              if (value.isEmpty) {
-                                return 'Informe uma data válida!';
-                              }
-
-                              final _input = _nascimentoFormatter.getMaskedText();
-                              
-                              final DateTime _data = _dateFormat.parse(_input);
-
-                              if (_data.isAfter(DateTime.now())) {
-                                return 'Informe uma data válida';
-                              }
-
-                              if (_data.isBefore(DateTime(1900))) {
-                                return 'Informe uma data válida';
-                              }
-
-                              return null;
-                            },
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                            decoration: standardFormInput(label: 'NASCIMENTO', hintText: '31/12/1999'),
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.all(20),
-                          child: TextFormField(
-                            minLines: 1,
-                            maxLines: 3,
-                            controller: _doencasCTRL,
-                            keyboardType: TextInputType.name,
-                            textCapitalization: TextCapitalization.words,
-                            onEditingComplete: () => FocusScope.of(context).nextFocus(),
+                            controller: _crmCTRL,
+                            keyboardType: TextInputType.streetAddress,
+                            textCapitalization: TextCapitalization.characters,
                             autovalidateMode: AutovalidateMode.onUserInteraction,
+                            autocorrect: false,                            
                             validator: (value) {
                               bool isValid = RegExp(
-                                r"^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
+                                r"^[0-9]{4,10}\/[A-Z]{2}$"
                               ).hasMatch(value);
 
                               if (isValid) {
                                 return null;
                               } else {
-                                return "Contém caractere inválido!";
+                                return "CRM inválido!";
                               }
                             },
                             style: TextStyle(
                               fontSize: 18,
                             ),
-                            decoration: standardFormInput(
-                              label: 'DOENÇAS CRÔNICAS',
-                              hintText: 'Separadas por vírgula...',
-                              helperText: 'Ex.: Diabetes, Lupus'
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.all(20),
-                          child: TextFormField(
-                            minLines: 1,
-                            maxLines: 3,
-                            controller: _alergiasCTRL,
-                            textCapitalization: TextCapitalization.words,
-                            keyboardType: TextInputType.name,
-                            onEditingComplete: () => FocusScope.of(context).nextFocus(),
-                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                            validator: (value) {
-                              bool isValid = RegExp(
-                                r"^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
-                              ).hasMatch(value);
-
-                              if (isValid) {
-                                return null;
-                              } else {
-                                return "Contém caractere inválido!";
-                              }
-                            },
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                            decoration: standardFormInput(
-                              label: 'ALERGIAS',
-                              hintText: 'Separadas por vírgula...',
-                              helperText: 'Ex.: Benzetacil, Dipirona'
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.all(20),
-                          child: TextFormField(
-                            minLines: 1,
-                            maxLines: 3,
-                            controller: _remediosCTRL,
-                            textCapitalization: TextCapitalization.words,
-                            keyboardType: TextInputType.name,
-                            onEditingComplete: () => FocusScope.of(context).nextFocus(),
-                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                            validator: (value) {
-                              bool isValid = RegExp(
-                                r"^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
-                              ).hasMatch(value);
-
-                              if (isValid) {
-                                return null;
-                              } else {
-                                return "Contém caractere inválido!";
-                              }
-                            },
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                            decoration: standardFormInput(
-                              label: 'REMÉDIOS CONSUMIDOS REGULARMENTE',
-                              hintText: 'Separados por vírgula...',
-                              helperText: 'Ex.: Insulina, Cloridrato de nafazolina'
-                            ),
+                            decoration: standardFormInput(label: 'CRM', hintText: '0000/UF'),
                           ),
                         ),
                       ],

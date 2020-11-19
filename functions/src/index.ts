@@ -7,7 +7,7 @@ const db = admin.firestore();
 const fcm = admin.messaging();
 
 export const novaReceita = functions.firestore
-    .document('/receitas/{id}')
+    .document('/tratamentos/{id}')
     .onCreate(async snapshot => {
         const receita = snapshot.data();
 
@@ -34,16 +34,16 @@ export const novaReceita = functions.firestore
         return fcm.sendToDevice(tokens, payload);
     });
 
-export const retornoReceita = functions.firestore
-    .document('/receitas/{id}')
+export const retornoTratamento = functions.firestore
+    .document('/tratamentos/{id}')
     .onUpdate(async snapshot => {
-        const receita = snapshot.after.data();
+        const tratamento = snapshot.after.data();
         const retorno = snapshot.after.data();
 
         if (retorno.estado <= 2.5) {
             const querySnapshot = await db
                 .collection('medicos')
-                .doc(receita.mid.toString())
+                .doc(tratamento.mid.toString())
                 .collection('tokens')
                 .get();
             
@@ -52,13 +52,13 @@ export const retornoReceita = functions.firestore
             const payload: admin.messaging.MessagingPayload = {
                 notification: {
                     title: 'Paciente mal!',
-                    body: `${receita.paciente} não está se sentindo bem com o tratamento...`,
+                    body: `${tratamento.paciente} não está se sentindo bem com o tratamento...`,
                     clickAction: 'FLUTTER_NOTIFICATION_CLICK',
                     badge: '1',
                 },
                 data: {
-                    'rid': `${receita.id}`,
-                    'pid': `${receita.pid}`,
+                    'rid': `${tratamento.id}`,
+                    'pid': `${tratamento.pid}`,
                     'estado': `${retorno.estado}`
                 }
             };
@@ -69,7 +69,7 @@ export const retornoReceita = functions.firestore
         if (retorno.estado >= 4.5) {
             const querySnapshot = await db
                 .collection('medicos')
-                .doc(receita.mid.toString())
+                .doc(tratamento.mid.toString())
                 .collection('tokens')
                 .get();
             
@@ -78,13 +78,13 @@ export const retornoReceita = functions.firestore
             const payload: admin.messaging.MessagingPayload = {
                 notification: {
                     title: 'Melhora do paciente!',
-                    body: `${receita.paciente} está se sentindo muito bem com o tratamento...`,
+                    body: `${tratamento.paciente} está se sentindo muito bem com o tratamento...`,
                     clickAction: 'FLUTTER_NOTIFICATION_CLICK',
                     badge: '1',
                 },
                 data: {
-                    'rid': `${receita.id}`,
-                    'pid': `${receita.pid}`,
+                    'rid': `${tratamento.id}`,
+                    'pid': `${tratamento.pid}`,
                     'estado': `${retorno.estado}`
                 }
             };
