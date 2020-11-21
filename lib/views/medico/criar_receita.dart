@@ -1,15 +1,17 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:observe/classes/api_response.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
 import 'package:observe/models/medico.dart';
 import 'package:observe/models/paciente.dart';
+import 'package:observe/models/receita.dart';
 import 'package:observe/models/remedio.dart';
+import 'package:observe/models/tratamento.dart';
 import 'package:observe/models/usuario.dart';
-import 'package:observe/repositories/medico_repository.dart';
 import 'package:observe/repositories/paciente_repository.dart';
+import 'package:observe/repositories/receita_repository.dart';
 import 'package:observe/repositories/usuario_repository.dart';
 import 'package:observe/widgets/input_decoration.dart';
 import 'package:observe/widgets/linha_ficha_medica.dart';
@@ -18,21 +20,22 @@ import 'package:observe/widgets/multilinhas_ficha_medica.dart';
 import 'package:observe/widgets/remedio_controller.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 class CriarReceita extends StatefulWidget {
+  final Usuario usuarioMedico;
   final Medico medico;
   final Paciente paciente;
 
-  CriarReceita({this.medico, this.paciente});
+  CriarReceita({this.medico, this.usuarioMedico, this.paciente});
 
   @override
-  _CriarReceitaState createState() => _CriarReceitaState(medico, paciente);
+  _CriarReceitaState createState() => _CriarReceitaState(medico, usuarioMedico, paciente);
 }
 
 class _CriarReceitaState extends State<CriarReceita> {
   Usuario _usuario;
+  final Usuario _usuarioMedico;
   Medico _medico;
   Paciente _paciente;
   bool _visible = false;
@@ -42,14 +45,146 @@ class _CriarReceitaState extends State<CriarReceita> {
 
   DateFormat _dateFormat;
 
-  _CriarReceitaState([this._medico, this._paciente]) : _novo = _paciente == null ? true : false;
+  _CriarReceitaState([this._medico, this._usuarioMedico, this._paciente]) : _novo = _paciente == null ? true : false;
 
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   TextEditingController _pidCTRL = TextEditingController();
 
-  enviar() {
+  enviar() async {
+    if (_paciente.isEmpty) {
+      Get.dialog(
+        AlertDialog(
+          title: Text('Paciente não identificado...'),
+          content: Text('Busque o paciente pelo ID antes de confirmar a receita!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Get.back();
+              },
+              child: Text(
+                'Ok',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        )
+      );
 
+      setState(() {
+        _visible = true;
+      });
+
+      return;
+    }
+
+    final ReceitaRepository _repo = ReceitaRepository();
+
+    final Receita _receita = Receita(
+      mid: _medico.id,
+      pid: _paciente.id,
+      remedios: _remedios
+    );
+
+    await _repo.createReceita(_receita)
+      .then((receita) async {
+        final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+        final Tratamento _tratamento = Tratamento(
+          id: receita.id,
+          mid: receita.mid,
+          pid: receita.pid,
+          medico: _usuarioMedico.nome,
+          paciente: _usuario.nome,
+          inicio: DateTime.now(),
+          retorno: DateTime.now(),
+          estado: 3,
+        );
+
+        
+        await _firestore
+          .collection('tratamentos')
+          .doc('${_tratamento.id}')
+          .set(_tratamento.toMap())
+          .then((value) {
+            Get.dialog(
+              AlertDialog(
+                title: Text('Prontinho!'),
+                content: Text(
+                  'Sua receita já foi criada e enviada ao paciente...'
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Get.back(closeOverlays: true);
+                    },
+                    child: Text(
+                      'Ok',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            );
+          })
+          .catchError((erro) {
+            Get.dialog(
+              AlertDialog(
+                title: Text('Ops...'),
+                content: Text(
+                  'Não foi possível criar a receita...'
+                  '\n\n'
+                  'Tente mais tarde!'
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    child: Text(
+                      'Ok',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            );
+          });
+
+      }).catchError((erro) {
+        Get.dialog(
+          AlertDialog(
+            title: Text('Ops...'),
+            content: Text(
+              'Não foi possível criar a receita...'
+              '\n\n'
+              'Tente mais tarde!'
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                },
+                child: Text(
+                  'Ok',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          )
+        );
+      });
+
+      setState(() {
+        _visible = true;
+      });
   }
 
   adicionarRemedio() {
@@ -60,25 +195,27 @@ class _CriarReceitaState extends State<CriarReceita> {
     PacienteRepository _pacienteRepo = PacienteRepository();
     UsuarioRepository _usuarioRepo = UsuarioRepository();
 
-    await _pacienteRepo.readPaciente(id: int.parse(_pidCTRL.text))
-      .then((paciente) async {
-        _paciente = paciente;
-      }).catchError((erro) {
-        _paciente = Paciente();
-      });
-
-    _paciente.doencas.removeWhere((e) => e.isEmpty);
-    _paciente.alergias.removeWhere((e) => e.isEmpty);
-    _paciente.remedios.removeWhere((e) => e.isEmpty);
-
-    if (_paciente.isNotEmpty) {
-      await _usuarioRepo.readUsuario(id: _paciente.uid)
-        .then((usuario) async {
-          _usuario = usuario;
+    if (_formKey.currentState.validate()) {
+      await _pacienteRepo.readPaciente(id: int.parse(_pidCTRL.text))
+        .then((paciente) async {
+          _paciente = paciente;
         }).catchError((erro) {
-          _usuario = Usuario();
+          _paciente = Paciente();
         });
 
+      _paciente.doencas.removeWhere((e) => e.isEmpty);
+      _paciente.alergias.removeWhere((e) => e.isEmpty);
+      _paciente.remedios.removeWhere((e) => e.isEmpty);
+
+      if (_paciente.isNotEmpty) {
+        await _usuarioRepo.readUsuario(id: _paciente.uid)
+          .then((usuario) async {
+            _usuario = usuario;
+          }).catchError((erro) {
+            _usuario = Usuario();
+          });
+
+      }
     }
 
     setState(() {
@@ -140,37 +277,6 @@ class _CriarReceitaState extends State<CriarReceita> {
                   fontSize: 20,
                 ),
               ),
-              actions: [
-                PopupMenuButton(
-                  itemBuilder: (context) => <PopupMenuEntry<Opcoes>>[
-                    PopupMenuItem(
-                      value: Opcoes.config,
-                      child: Text('Configurações'),
-                    ),
-                    PopupMenuItem(
-                      value: Opcoes.trocar,
-                      child: Text('Trocar de perfil'),
-                    ),
-                    PopupMenuItem(
-                      value: Opcoes.sair,
-                      child: Text('Desconectar'),
-                    ),
-                  ],
-                  onSelected: (Opcoes opcoes) {
-                    switch (opcoes) {
-                      case Opcoes.config:
-                        print('popup :: Configurações');
-                        break;
-                      case Opcoes.trocar:
-                        print('popup :: Trocar de perfil');
-                        break;
-                      case Opcoes.sair:
-                        context.read<Preferences>().setPerfil(Perfil.usuario);
-                        break;
-                    }
-                  },
-                )
-              ],
             ),
             SliverToBoxAdapter(
               child: Column(
@@ -297,19 +403,35 @@ class _CriarReceitaState extends State<CriarReceita> {
                                   itemCount: _remedios.length + 1,
                                   itemBuilder: _remedios.isEmpty
                                     ? (context, index) {
-                                      return RemedioController(
-                                        Remedio(),
-                                        adicionar: (Remedio remedio) {
-                                          setState(() {
-                                            _remedios.add(remedio);
-                                          });
+                                      return Dismissible(
+                                        key: Key('$index'),
+                                        confirmDismiss: (direction) {
+                                          if (_remedios.length == index) {
+                                            return Future(() {
+                                              return false;
+                                            });
+                                          } else {
+                                            _remedios.removeAt(index);
+                                            return Future(() {
+                                              return true;
+                                            });
+                                          }
                                         },
-                                        atualizar: (Remedio remedio) {
-                                          print('#################### ::: $index');
-                                          setState(() {
-                                            _remedios.insert(index, remedio);
-                                          });
-                                        },
+                                        child: RemedioController(
+                                          Remedio(),
+                                          adicionar: (Remedio remedio) {
+                                            setState(() {
+                                              print('ADICIONAR :: $index');
+                                              _remedios.add(remedio);
+                                            });
+                                          },
+                                          atualizar: (Remedio remedio) {
+                                            setState(() {
+                                              _remedios[index] = remedio;
+                                              print('ATUALIZAR :: $index');
+                                            });
+                                          },
+                                        ),
                                       );
                                     }
                                     : (context, index) {
@@ -317,14 +439,14 @@ class _CriarReceitaState extends State<CriarReceita> {
                                       Remedio _remedio = Remedio();
                                       Function _adicionar = (Remedio remedio) {
                                         setState(() {
+                                          print('ADICIONAR :: $index');
                                           _remedios.add(remedio);
                                         });
                                       };
                                       Function _atualizar = (Remedio remedio) {
-                                        print('#################### ::: $index');
-
                                         setState(() {
-                                          _remedios.insert(index, remedio);
+                                          print('ATUALIZAR :: $index');
+                                          _remedios[index] = remedio;
                                         });
                                       };
 
@@ -332,10 +454,25 @@ class _CriarReceitaState extends State<CriarReceita> {
                                         _remedio = _remedios.elementAt(index);
                                       }
 
-                                      return RemedioController(
-                                        _remedio,
-                                        adicionar: _adicionar,
-                                        atualizar: _atualizar,
+                                      return Dismissible(
+                                        key: Key('$index'),
+                                        confirmDismiss: (direction) {
+                                          if (_remedios.length == index) {
+                                            return Future(() {
+                                              return false;
+                                            });
+                                          } else {
+                                            _remedios.removeAt(index);
+                                            return Future(() {
+                                              return true;
+                                            });
+                                          }
+                                        },
+                                        child: RemedioController(
+                                          _remedio,
+                                          adicionar: _adicionar,
+                                          atualizar: _atualizar,
+                                        ),
                                       );
                                   },
                                 ),
@@ -350,7 +487,7 @@ class _CriarReceitaState extends State<CriarReceita> {
                     margin: EdgeInsets.only(top: 30, bottom: 60),
                     child: FlatButton(
                       onPressed: () {
-                        _remedios.printInfo();
+                        enviar();
                       },
                       height: 50,
                       splashColor: ObserveColors.green,

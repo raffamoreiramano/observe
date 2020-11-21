@@ -20,7 +20,7 @@ class TabelaRemedio extends Tabela {
 
   @override
   Future<void> update(Remedio remedio) async {
-    var result = await database.update(tabela, remedio.toMap(), where: 'id = ?', whereArgs: [remedio.id]);
+    var result = await database.update(tabela, remedio.toMap(true), where: 'id = ?', whereArgs: [remedio.id]);
     print('result : $result');
   }
 

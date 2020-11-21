@@ -107,7 +107,11 @@ class CardTratamento extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(_icone),
+                Icon(
+                  _icone,
+                  size: 30,
+                  color: _cor,
+                ),
                 Text(
                   _estado,
                   style: TextStyle(

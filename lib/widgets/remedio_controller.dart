@@ -68,17 +68,19 @@ class _RemedioControllerState extends State<RemedioController> {
   gravar() {
     initializeDateFormatting('pt_BR', null);
     final DateFormat _format = DateFormat('HH:mm');
+    final _dateTime = _format.parse(_horarioCTRL.text);
+    final _timeOfDay = TimeOfDay.fromDateTime(_dateTime);
 
     remedio.nome = _remedioCTRL.text;
     remedio.medida = _medida;
     remedio.quantia = double.parse(_quantiaCTRL.text);
-    remedio.horario = TimeOfDay.fromDateTime(_format.parse(_horarioCTRL.text));
+    remedio.horario = _timeOfDay;
+
+    _gravado ? atualizar.call(remedio) : adicionar.call(remedio);
 
     setState(() {
       _gravado = true;
     });
-
-    _gravado ? atualizar.call(remedio) : adicionar.call(remedio);
   }
 
   @override

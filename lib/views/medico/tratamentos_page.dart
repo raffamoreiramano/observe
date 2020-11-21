@@ -125,21 +125,19 @@ class _TratamentosPageState extends State<TratamentosPage> {
 
     await _db.clear();
 
-    tratamentos.map((tratamento) async {
-      tratamento.id = tratamentos.indexOf(tratamento);
+    tratamentos.forEach((tratamento) async {
       await _db.create(tratamento);
     });
+
 
     setState(() {
       _visible = true;
     });
-
-    _futureKey.currentState.reassemble();
   }
 
   Future<void> fetchFirestore() async {
     final snapshot = await _firestore
-      .collection('/tratamentos')
+      .collection('tratamentos')
       .where('mid', isEqualTo: _medico.id)
       .get();
     
@@ -147,7 +145,6 @@ class _TratamentosPageState extends State<TratamentosPage> {
       .docs
       .map((doc) => Tratamento.fromMap(doc.data()))
       .toList();
-
 
     await salvarTratamentos(tratamentos);
   }
@@ -200,6 +197,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
   Future<void> criarReceita() async {
     Get.to(CriarReceita(
       medico: _medico,
+      usuarioMedico: _usuario,
     ));
   }
 
@@ -246,137 +244,170 @@ class _TratamentosPageState extends State<TratamentosPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          criarReceita();
-        },
-        child: Icon(Icons.add_circle_outline_outlined),
+      floatingActionButton: Container(
+        margin: EdgeInsets.all(10),
+        height: 90,
+        width: 90,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          border: Border.all(
+            color: ObserveColors.orange,
+            width: 2,
+          )
+        ),
+        child: RawMaterialButton(
+          onPressed: () {
+            criarReceita();
+          },
+          shape: CircleBorder(),
+          highlightColor: ObserveColors.orange[30],
+          splashColor: ObserveColors.orange[30],
+          child: Container(
+            height: 90,
+            width: 90,
+            padding: EdgeInsets.only(
+              left: 7,
+            ),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.playlist_add, size: 30, color: Colors.blueGrey[300]),
+          ),
+        ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            backgroundColor: ObserveColors.dark,
-            toolbarHeight: 80,
-            leadingWidth: 70,
-            leading: Container(
-              margin: EdgeInsets.only(left: 15),
-              child: CircleAvatar(
-                backgroundColor: ObserveColors.aqua[30],
-                foregroundColor: ObserveColors.aqua,
-                child: Icon(
-                  Icons.person_rounded,
-                  size: 30,
+      body: RefreshIndicator(
+        onRefresh: () {
+          return fetchFirestore();
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              backgroundColor: ObserveColors.dark,
+              toolbarHeight: 80,
+              leadingWidth: 70,
+              leading: Container(
+                margin: EdgeInsets.only(left: 15),
+                child: CircleAvatar(
+                  backgroundColor: ObserveColors.orange[30],
+                  foregroundColor: ObserveColors.orange,
+                  child: Icon(
+                    Icons.healing_rounded,
+                    size: 30,
+                  ),
                 ),
               ),
-            ),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${_usuario.nome} ${_usuario.sobrenome}',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 22,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${_usuario.nome} ${_usuario.sobrenome}',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 22,
+                    ),
                   ),
-                ),
-                Text(
-                  'CRM: ${_medico.crm}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w100,
-                    color: Colors.white70,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              PopupMenuButton(
-                itemBuilder: (context) => <PopupMenuEntry<Opcoes>>[
-                  PopupMenuItem(
-                    value: Opcoes.config,
-                    child: Text('Configurações'),
-                  ),
-                  PopupMenuItem(
-                    value: Opcoes.trocar,
-                    child: Text('Trocar de perfil'),
-                  ),
-                  PopupMenuItem(
-                    value: Opcoes.sair,
-                    child: Text('Desconectar'),
+                  Text(
+                    'CRM: ${_medico.crm}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w100,
+                      color: Colors.white70,
+                      fontSize: 18,
+                    ),
                   ),
                 ],
-                onSelected: (Opcoes opcoes) {
-                  switch (opcoes) {
-                    case Opcoes.config:
-                      editarPerfil();
-                      break;
-                    case Opcoes.trocar:
-                      trocarPerfil();
-                      break;
-                    case Opcoes.sair:
-                      desconectar();
-                      break;
-                  }
-                },
-              )
-            ],
-          ),
-          SliverToBoxAdapter(
-            child:  Visibility(
-              visible: _visible,
-              replacement: Container(
-                height: MediaQuery.of(context).size.height - 160,
-                alignment: Alignment.center,
-                child: Loader(),            
               ),
-              child: FutureBuilder<List<Tratamento>>(
-                key: _futureKey,
-                future: fetchDatabase(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    List<Tratamento> _lista = snapshot.data;
+              actions: [
+                PopupMenuButton(
+                  itemBuilder: (context) => <PopupMenuEntry<Opcoes>>[
+                    PopupMenuItem(
+                      value: Opcoes.config,
+                      child: Text('Configurações'),
+                    ),
+                    PopupMenuItem(
+                      value: Opcoes.trocar,
+                      child: Text('Trocar de perfil'),
+                    ),
+                    PopupMenuItem(
+                      value: Opcoes.sair,
+                      child: Text('Desconectar'),
+                    ),
+                  ],
+                  onSelected: (Opcoes opcoes) {
+                    switch (opcoes) {
+                      case Opcoes.config:
+                        editarPerfil();
+                        break;
+                      case Opcoes.trocar:
+                        trocarPerfil();
+                        break;
+                      case Opcoes.sair:
+                        desconectar();
+                        break;
+                    }
+                  },
+                )
+              ],
+            ),
+            SliverToBoxAdapter(
+              child:  Visibility(
+                visible: _visible,
+                replacement: Container(
+                  height: MediaQuery.of(context).size.height - 160,
+                  alignment: Alignment.center,
+                  child: Loader(),            
+                ),
+                child: FutureBuilder<List<Tratamento>>(
+                  key: _futureKey,
+                  future: fetchDatabase(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      List<Tratamento> _lista = snapshot.data;
 
-                    if (_lista.isNotEmpty) {
-                      return ListView.builder(
-                        padding: EdgeInsets.only(
-                          top: 10,
-                          right: 10,
-                          bottom: 130,
-                          left: 10,
+                      if (_lista.isNotEmpty) {
+                        return ListView.builder(
+                          padding: EdgeInsets.only(
+                            top: 10,
+                            right: 10,
+                            bottom: 130,
+                            left: 10,
+                          ),
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: _lista.length,              
+                          itemBuilder: (context, index) {
+                            return CardTratamento(
+                              index: index,
+                              tratamento: _lista[index],
+                            );
+                          },
+                        );
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.all(50),
+                        child: Text(
+                          'Parece que você ainda não acompanha nenhum tratamento...',
+                          style: TextStyle(
+                            color: Colors.blueGrey,
+                          ),
                         ),
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: _lista.length,              
-                        itemBuilder: (context, index) {
-                          return CardTratamento(
-                            index: index,
-                          );
-                        },
+                      );
+                    } else {
+                      return Container(
+                        height: MediaQuery.of(context).size.height - 160,
+                        alignment: Alignment.center,
+                        child: Loader(),            
                       );
                     }
-
-                    return Padding(
-                      padding: EdgeInsets.all(50),
-                      child: Text(
-                        'Parece que você ainda não acompanha nenhum tratamento...',
-                        style: TextStyle(
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                    );
-                  } else {
-                    return Container(
-                      height: MediaQuery.of(context).size.height - 160,
-                      alignment: Alignment.center,
-                      child: Loader(),            
-                    );
-                  }
-                },
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

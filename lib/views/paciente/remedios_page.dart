@@ -13,6 +13,7 @@ import 'package:observe/models/alarme.dart';
 import 'package:observe/models/estado_do_paciente.dart';
 import 'package:observe/models/paciente.dart';
 import 'package:observe/models/receita.dart';
+import 'package:observe/models/tratamento.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:observe/repositories/receita_repository.dart';
 import 'package:observe/services/auth.dart';
@@ -139,7 +140,7 @@ class _RemediosPageState extends State<RemediosPage> {
 
     List<Remedio> remedios = receita.remedios;
     
-    remedios.map((remedio) async {
+    remedios.forEach((remedio) async {
       remedio.id = remedios.indexOf(remedio);
       await _db.create(remedio);
     });
@@ -156,7 +157,7 @@ class _RemediosPageState extends State<RemediosPage> {
 
     await _db.clear();
 
-    alarmes.map((alarme) async {
+    alarmes.forEach((alarme) async {
       await _db.create(alarme);
     });
 
@@ -176,6 +177,26 @@ class _RemediosPageState extends State<RemediosPage> {
       }).catchError((erro) {
         print(erro);
       });
+  }
+
+  Future<void> fetchFirestore() async {
+    final snapshot = await _firestore
+      .collection('tratamentos')
+      .where('pid', isEqualTo: _paciente.id)
+      .orderBy(FieldPath.documentId)
+      .limitToLast(1)
+      .get();
+    
+    List<Tratamento> tratamentos = snapshot
+      .docs
+      .map((doc) => Tratamento.fromMap(doc.data()))
+      .toList();
+    
+    if (tratamentos.isEmpty) {
+      return;
+    }
+
+    await fetchAPI(tratamentos.single.id);
   }
 
   confirmarReceita(int rid) {
@@ -320,136 +341,138 @@ class _RemediosPageState extends State<RemediosPage> {
         create: (context) => EstadoNotifier(),
         child: BotaoRetorno(),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            backgroundColor: ObserveColors.dark,
-            toolbarHeight: 80,
-            leadingWidth: 70,
-            leading: Container(
-              margin: EdgeInsets.only(left: 15),
-              child: CircleAvatar(
-                backgroundColor: ObserveColors.aqua[30],
-                foregroundColor: ObserveColors.aqua,
-                child: Icon(
-                  Icons.person_rounded,
-                  size: 30,
+      body: RefreshIndicator(
+        onRefresh: () {
+          return fetchFirestore();
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              backgroundColor: ObserveColors.dark,
+              toolbarHeight: 80,
+              leadingWidth: 70,
+              leading: Container(
+                margin: EdgeInsets.only(left: 15),
+                child: CircleAvatar(
+                  backgroundColor: ObserveColors.aqua[30],
+                  foregroundColor: ObserveColors.aqua,
+                  child: Icon(
+                    Icons.person_rounded,
+                    size: 30,
+                  ),
                 ),
               ),
-            ),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${_usuario.nome} ${_usuario.sobrenome}',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 22,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${_usuario.nome} ${_usuario.sobrenome}',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 22,
+                    ),
                   ),
-                ),
-                Text(
-                  'ID: ${_paciente.id}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w100,
-                    color: Colors.white70,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              PopupMenuButton(
-                itemBuilder: (context) => <PopupMenuEntry<Opcoes>>[
-                  PopupMenuItem(
-                    value: Opcoes.config,
-                    child: Text('Configurações'),
-                  ),
-                  PopupMenuItem(
-                    value: Opcoes.trocar,
-                    child: Text('Trocar de perfil'),
-                  ),
-                  PopupMenuItem(
-                    value: Opcoes.sair,
-                    child: Text('Desconectar'),
+                  Text(
+                    'ID: ${_paciente.id}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w100,
+                      color: Colors.white70,
+                      fontSize: 18,
+                    ),
                   ),
                 ],
-                onSelected: (Opcoes opcoes) {
-                  switch (opcoes) {
-                    case Opcoes.config:
-                      editarPerfil();
-                      break;
-                    case Opcoes.trocar:
-                      trocarPerfil();
-                      break;
-                    case Opcoes.sair:
-                      desconectar();
-                      break;
-                  }
-                },
-              )
-            ],
-          ),
-          SliverToBoxAdapter(
-            child:  Visibility(
-              visible: _visible,
-              replacement: Container(
-                height: MediaQuery.of(context).size.height - 160,
-                alignment: Alignment.center,
-                child: Loader(),            
               ),
-              child: FutureBuilder<List<Remedio>>(
-                key: _futureKey,
-                future: fetchDatabase(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    List<Remedio> _lista = snapshot.data;
+              actions: [
+                PopupMenuButton(
+                  itemBuilder: (context) => <PopupMenuEntry<Opcoes>>[
+                    PopupMenuItem(
+                      value: Opcoes.config,
+                      child: Text('Configurações'),
+                    ),
+                    PopupMenuItem(
+                      value: Opcoes.trocar,
+                      child: Text('Trocar de perfil'),
+                    ),
+                    PopupMenuItem(
+                      value: Opcoes.sair,
+                      child: Text('Desconectar'),
+                    ),
+                  ],
+                  onSelected: (Opcoes opcoes) {
+                    switch (opcoes) {
+                      case Opcoes.config:
+                        editarPerfil();
+                        break;
+                      case Opcoes.trocar:
+                        trocarPerfil();
+                        break;
+                      case Opcoes.sair:
+                        desconectar();
+                        break;
+                    }
+                  },
+                )
+              ],
+            ),
+            SliverToBoxAdapter(
+              child:  Visibility(
+                visible: _visible,
+                replacement: Container(
+                  height: MediaQuery.of(context).size.height - 160,
+                  alignment: Alignment.center,
+                  child: Loader(),            
+                ),
+                child: FutureBuilder<List<Remedio>>(
+                  key: _futureKey,
+                  future: fetchDatabase(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      List<Remedio> _lista = snapshot.data;
 
-                    if (_lista.isNotEmpty) {
-                      return ListView.builder(
-                        padding: EdgeInsets.only(
-                          top: 10,
-                          right: 10,
-                          bottom: 130,
-                          left: 10,
+                      if (_lista.isNotEmpty) {
+                        return ListView.builder(
+                          padding: EdgeInsets.only(
+                            top: 10,
+                            right: 10,
+                            bottom: 130,
+                            left: 10,
+                          ),
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: _lista.length,              
+                          itemBuilder: (context, index) {
+                            return CardRemedio(
+                              _lista[index],
+                            );
+                          },
+                        );
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.all(50),
+                        child: Text(
+                          'Parece que você ainda não tem nenhuma receita disponível...'
+                          '\n\n'
+                          'Solicite ao seu médico que mande a receita para o seu ID!',
+                          style: TextStyle(
+                            color: Colors.blueGrey,
+                          ),
                         ),
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: _lista.length,              
-                        itemBuilder: (context, index) {
-                          return CardRemedio(
-                            _lista[index],
-                            callback: (bool value) {
-                              _lista[index].tomado = value;
-                            },
-                          );
-                        },
+                      );
+                    } else {
+                      return Container(
+                        height: MediaQuery.of(context).size.height - 160,
+                        alignment: Alignment.center,
+                        child: Loader(),            
                       );
                     }
-
-                    return Padding(
-                      padding: EdgeInsets.all(50),
-                      child: Text(
-                        'Parece que você ainda não tem nenhuma receita disponível...'
-                        '\n\n'
-                        'Solicite ao seu médico que mande a receita para o seu ID!',
-                        style: TextStyle(
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                    );
-                  } else {
-                    return Container(
-                      height: MediaQuery.of(context).size.height - 160,
-                      alignment: Alignment.center,
-                      child: Loader(),            
-                    );
-                  }
-                },
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

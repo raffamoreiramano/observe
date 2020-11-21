@@ -47,6 +47,7 @@ class LocalDatabase {
         await db.execute(
           'CREATE TABLE alarme ('
           'id INTEGER PRIMARY KEY, '
+          'remedio TEXT NOT NULL, '
           'ligado INTEGER DEFAULT 0);'
         );
         await db.execute(

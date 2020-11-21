@@ -9,9 +9,23 @@ class Remedio extends Item {
   int id;
   String nome, medida, _horario;
   double quantia;
-  TimeOfDay horario;
   bool tomado = false;
 
+  TimeOfDay get horario {
+    initializeDateFormatting('pt_BR', null);
+    final DateFormat _format = DateFormat('HH:mm');
+    
+    return TimeOfDay.fromDateTime(_format.parse(_horario));
+  }
+
+  set horario(TimeOfDay value) {
+    initializeDateFormatting('pt_BR', null);
+    final DateFormat _format = DateFormat('HH:mm');
+
+    
+    _horario = _format.format(DateTime(0, 0, 0, value.hour, value.minute));
+    print(_horario);
+  }
 
   bool get isEmpty {
     return toMap().isEmpty;
@@ -26,26 +40,39 @@ class Remedio extends Item {
     this.nome,
     this.medida,
     this.quantia,
-    this.horario,
+    this.tomado,
+    TimeOfDay horario,
   }) {
     if (horario != null) {
-      initializeDateFormatting('pt_BR', null);
-      final DateFormat _format = DateFormat('HH:mm');
-      
-      _horario = _format.format(DateTime(0, 0, 0, horario.hour, horario.minute));
+      this.horario = horario;
     }
   }
 
   factory Remedio.fromMap(Map<String, dynamic> data) {
     final DateFormat _format = DateFormat('HH:mm');
-    final DateTime _dateTime = _format.parse(data['horario']);    
+    final DateTime _dateTime = _format.parse(data['horario']);
+
+    bool _tomado;
+
+    switch(data['tomado']) {
+      case 0:
+        _tomado = false;
+        break;
+      case 1:
+        _tomado = true;
+        break;
+      default:
+        _tomado = false;
+        break;
+    }
 
     final Remedio remedio = Remedio(
       id : data['id'],
       nome : data['nome'],
       medida : data['medida'],
-      quantia : data['quantia'],
+      quantia : data['quantia'] is double ? data['quantia'] : double.parse(data['quantia']),
       horario : TimeOfDay.fromDateTime(_dateTime),
+      tomado: _tomado,
     );
 
     return remedio;

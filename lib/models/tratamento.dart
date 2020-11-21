@@ -30,7 +30,7 @@ class Tratamento extends Item {
     medico: data['medico'],
     paciente: data['paciente'],
     estado: data['estado'],
-    inicio: data['inicio'],
+    inicio: DateTime.parse(data['retorno']),
     retorno: DateTime.parse(data['retorno']),
   );
 
@@ -44,7 +44,7 @@ class Tratamento extends Item {
       'medico': medico,
       'paciente': paciente,
       'estado': estado,
-      'inicio': inicio,
+      'inicio': inicio.toIso8601String(),
       'retorno': retorno.toIso8601String(),
     };
 

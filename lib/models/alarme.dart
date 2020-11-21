@@ -25,16 +25,32 @@ class Alarme extends Item {
 
   factory Alarme.fromJson(String data) => Alarme.fromMap(json.decode(data));
 
-  factory Alarme.fromMap(Map<String, dynamic> data) => Alarme(
-    id: data['id'],
-    ligado: data['ligado'],
-    remedio: Remedio.fromMap(data['remedio']),
-  );
+  factory Alarme.fromMap(Map<String, dynamic> data) {
+    bool _ligado;
+
+    switch(data['ligado']) {
+      case 0:
+        _ligado = false;
+        break;
+      case 1:
+        _ligado = true;
+        break;
+      default:
+        _ligado = false;
+        break;
+    }
+    
+    return Alarme(
+      id: data['id'],
+      ligado: _ligado,
+      remedio: Remedio.fromJson(data['remedio']),
+    );
+  }
 
   Map<String, dynamic> toMap() => {
     'id': id,
     'ligado': ligado,
-    'remedio': remedio.toMap(),
+    'remedio': remedio.toJson(),
   };
 
   String toJson() => json.encode(toMap());
