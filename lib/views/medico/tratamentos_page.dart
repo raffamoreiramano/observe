@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:observe/classes/api_response.dart';
@@ -7,11 +8,12 @@ import 'package:observe/classes/enums.dart';
 import 'package:observe/classes/tabela_tratamento.dart';
 import 'package:observe/helpers/database.dart';
 import 'package:observe/helpers/preferences.dart';
-import 'package:observe/models/paciente.dart';
+import 'package:observe/models/medico.dart';
 import 'package:observe/models/tratamento.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:observe/services/auth.dart';
 import 'package:observe/services/messenger.dart';
+import 'package:observe/views/medico/criar_receita.dart';
 import 'package:observe/views/medico/formulario_medico.dart';
 import 'package:observe/widgets/card_tratamento.dart';
 import 'package:observe/widgets/loader.dart';
@@ -20,23 +22,24 @@ import 'package:observe/views/paciente/ficha_medica.dart';
 
 class TratamentosPage extends StatefulWidget {
   final Usuario usuario;
-  final Paciente paciente;
+  final Medico medico;
   
-  TratamentosPage({this.usuario, this.paciente});
+  TratamentosPage({this.usuario, this.medico});
 
   @override
-  _TratamentosPageState createState() => _TratamentosPageState(usuario, paciente);
+  _TratamentosPageState createState() => _TratamentosPageState(usuario, medico);
 }
 
 class _TratamentosPageState extends State<TratamentosPage> {
   final Usuario _usuario;
-  final Paciente _paciente;
+  final Medico _medico;
   final _db = LocalDatabase();
-  final messenger = CloudMessenger();
   final GlobalKey<State> _futureKey = GlobalKey<State>();
+  FirebaseFirestore _firestore;
+  CloudMessenger _messenger;
   bool _visible = true;
 
-  _TratamentosPageState(this._usuario, this._paciente);
+  _TratamentosPageState(this._usuario, this._medico);
 
   Future<List<Tratamento>> fetchDatabase() async {
     List<Tratamento> _lista = List<Tratamento>.empty();
@@ -117,33 +120,14 @@ class _TratamentosPageState extends State<TratamentosPage> {
     );
   }
 
-/*
-  salvarReceita(Receita receita) async {
-    await _db.defineTable(TabelaRemedio());
+  Future<void> salvarTratamentos(List<Tratamento> tratamentos) async {
+    await _db.defineTable(TabelaTratamento());
 
     await _db.clear();
 
-    List<Remedio> receitas = receita.Receitas;
-    
-    receitas.map((remedio) async {
-      remedio.id = receitas.indexOf(remedio);
-      await _db.create(remedio);
-    });
-
-    List<Alarme> alarmes = receitas.map((remedio) {
-      return Alarme(
-        id: Receitas.indexOf(remedio),
-        ligado: false,
-        remedio: remedio
-      );
-    }).toList();
-
-    await _db.defineTable(TabelaAlarme());
-
-    await _db.clear();
-
-    alarmes.map((alarme) async {
-      await _db.create(alarme);
+    tratamentos.map((tratamento) async {
+      tratamento.id = tratamentos.indexOf(tratamento);
+      await _db.create(tratamento);
     });
 
     setState(() {
@@ -153,18 +137,22 @@ class _TratamentosPageState extends State<TratamentosPage> {
     _futureKey.currentState.reassemble();
   }
 
-  fetchAPI(int rid) async {
-    final ReceitaRepository _repo = ReceitaRepository();
+  Future<void> fetchFirestore() async {
+    final snapshot = await _firestore
+      .collection('/tratamentos')
+      .where('mid', isEqualTo: _medico.id)
+      .get();
+    
+    List<Tratamento> tratamentos = snapshot
+      .docs
+      .map((doc) => Tratamento.fromMap(doc.data()))
+      .toList();
 
-    await _repo.readReceita(rid)
-      .then((receita) {
-        salvarReceita(receita);
-      }).catchError((erro) {
-        print(erro);
-      });
+
+    await salvarTratamentos(tratamentos);
   }
 
-  confirmarReceita(int rid) {
+  visualizarRetorno() {
     Get.dialog(
       AlertDialog(
         title: Text('Nova receita recebida!'),
@@ -182,7 +170,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
                 _visible = false;
               });
 
-              fetchAPI(rid);
+              fetchFirestore();
 
               Get.back();
             },
@@ -208,42 +196,50 @@ class _TratamentosPageState extends State<TratamentosPage> {
       ),
     );
   }
-*/
+
+  Future<void> criarReceita() async {
+    Get.to(CriarReceita(
+      medico: _medico,
+    ));
+  }
+
 
   @override
   void initState() {
     super.initState();
-    messenger.initialize(
+    _firestore = FirebaseFirestore.instance;
+    _messenger = CloudMessenger(_firestore);
+    _messenger.initialize(
       onMessage: (notification) async {
-        if (notification.type == 'receita') {
+        if (notification.type == 'retorno') {
           final payload = json.decode(notification.payload);
 
-          // return await confirmarReceita(payload['rid']);
+          // return await visualizarRetorno(payload['rid']);
         }
 
         return null;
       },
       onLaunch: (notification) async {
-        if (notification.type == 'receita') {
+        if (notification.type == 'retorno') {
           final payload = json.decode(notification.payload);
 
-          // return await confirmarReceita(payload['rid']);
+          // return await visualizarRetorno(payload['rid']);
         }
 
         return null;
       },
       onResume: (notification) async {
-        if (notification.type == 'receita') {
+        if (notification.type == 'retorno') {
           final payload = json.decode(notification.payload);
 
-          // return await confirmarReceita(payload['rid']);
+          // return await visualizarRetorno(payload['rid']);
         }
 
         return null;
       },
     );
 
-    messenger.salvarTokenMedico(_paciente.id);
+    _messenger.salvarTokenMedico(_medico.id);
   }
   
   @override
@@ -252,7 +248,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
       extendBody: true,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-
+          criarReceita();
         },
         child: Icon(Icons.add_circle_outline_outlined),
       ),
@@ -285,7 +281,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
                   ),
                 ),
                 Text(
-                  'ID: ${_paciente.id}',
+                  'CRM: ${_medico.crm}',
                   style: TextStyle(
                     fontWeight: FontWeight.w100,
                     color: Colors.white70,
@@ -353,7 +349,9 @@ class _TratamentosPageState extends State<TratamentosPage> {
                         physics: NeverScrollableScrollPhysics(),
                         itemCount: _lista.length,              
                         itemBuilder: (context, index) {
-                          return CardTratamento();
+                          return CardTratamento(
+                            index: index,
+                          );
                         },
                       );
                     }
@@ -361,9 +359,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
                     return Padding(
                       padding: EdgeInsets.all(50),
                       child: Text(
-                        'Parece que você ainda não tem nenhuma receita disponível...'
-                        '\n\n'
-                        'Solicite ao seu médico que mande a receita para o seu ID!',
+                        'Parece que você ainda não acompanha nenhum tratamento...',
                         style: TextStyle(
                           color: Colors.blueGrey,
                         ),

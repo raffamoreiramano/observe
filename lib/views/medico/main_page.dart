@@ -11,6 +11,7 @@ import 'package:observe/models/usuario.dart';
 import 'package:observe/repositories/medico_repository.dart';
 import 'package:observe/services/auth.dart';
 import 'package:observe/views/medico/formulario_medico.dart';
+import 'package:observe/views/medico/tratamentos_page.dart';
 import 'package:observe/widgets/loader.dart';
 import 'package:provider/provider.dart';
 
@@ -132,11 +133,6 @@ class _MedicoMainPageState extends State<MedicoMainPage> {
       return FormularioMedico(usuario: _usuario);
     }
 
-    return Scaffold(
-      body: Container(
-        height: MediaQuery.of(context).size.height - 80,
-        child: Text('teste'),
-      ),
-    );
+    return TratamentosPage(usuario: _usuario, medico: _medico);
   }
 }

@@ -13,7 +13,6 @@ import 'package:observe/widgets/loader.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-
 class FormularioMedico extends StatefulWidget {
   final Usuario usuario;
   final Medico medico;

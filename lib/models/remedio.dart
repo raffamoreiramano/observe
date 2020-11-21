@@ -28,10 +28,12 @@ class Remedio extends Item {
     this.quantia,
     this.horario,
   }) {
-    initializeDateFormatting('pt_BR', null);
-    final DateFormat _format = DateFormat('HH:mm');
-
-    _horario = _format.format(DateTime(0, 0, 0, horario.hour, horario.minute));
+    if (horario != null) {
+      initializeDateFormatting('pt_BR', null);
+      final DateFormat _format = DateFormat('HH:mm');
+      
+      _horario = _format.format(DateTime(0, 0, 0, horario.hour, horario.minute));
+    }
   }
 
   factory Remedio.fromMap(Map<String, dynamic> data) {

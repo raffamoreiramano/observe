@@ -49,6 +49,17 @@ class LocalDatabase {
           'id INTEGER PRIMARY KEY, '
           'ligado INTEGER DEFAULT 0);'
         );
+        await db.execute(
+          'CREATE TABLE tratamento ('
+          'id INTEGER PRIMARY KEY, '
+          'mid INTEGER NOT NULL, '
+          'pid INTEGER NOT NULL, '
+          'medico TEXT NOT NULL, '
+          'paciente TEXT NOT NULL, '
+          'inicio TEXT NOT NULL, '
+          'retorno TEXT NOT NULL, '
+          'estado REAL);'
+        );
       },
     );
     

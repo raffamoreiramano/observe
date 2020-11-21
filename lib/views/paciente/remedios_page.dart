@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:observe/classes/api_response.dart';
@@ -39,7 +40,8 @@ class _RemediosPageState extends State<RemediosPage> {
   final Usuario _usuario;
   final Paciente _paciente;
   final _db = LocalDatabase();
-  final messenger = CloudMessenger();
+  CloudMessenger _messenger;
+  FirebaseFirestore _firestore;
   final GlobalKey<State> _futureKey = GlobalKey<State>();
   bool _visible = true;
 
@@ -224,7 +226,9 @@ class _RemediosPageState extends State<RemediosPage> {
   @override
   void initState() {
     super.initState();
-    messenger.initialize(
+    _firestore = FirebaseFirestore.instance;
+    _messenger = CloudMessenger(_firestore);
+    _messenger.initialize(
       onMessage: (notification) async {
         if (notification.type == 'receita') {
           final payload = json.decode(notification.payload);
@@ -254,7 +258,7 @@ class _RemediosPageState extends State<RemediosPage> {
       },
     );
 
-    messenger.salvarTokenMedico(_paciente.id);
+    _messenger.salvarTokenMedico(_paciente.id);
   }
   
   @override

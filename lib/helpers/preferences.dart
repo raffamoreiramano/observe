@@ -15,8 +15,6 @@ class Preferences extends ChangeNotifier {
   Medico get medico => _medico;
   Paciente _paciente;
   Paciente get paciente => _paciente;
-  List<Receita> _receitas;
-  List<Receita> get receitas => _receitas;
   Perfil _perfil;
   Perfil get perfil => _perfil;
 
@@ -24,7 +22,6 @@ class Preferences extends ChangeNotifier {
     _usuario = getUsuario();
     _medico = getMedico();
     _paciente = getPaciente();
-    _receitas = getReceitas();
     _perfil = getPerfil();
   }
 
@@ -49,11 +46,6 @@ class Preferences extends ChangeNotifier {
     if (value is Paciente) {
       _paciente = value;
     }
-
-    if (value is List<Receita>) {
-      _receitas = value;
-    }
-
     
     return await _preferences.setString(key, value.toString()) ? notifyListeners() : false;
   }
@@ -99,26 +91,6 @@ class Preferences extends ChangeNotifier {
     return paciente.isEmpty ? Paciente() : Paciente.fromJson(paciente);
   }
 
-  Future setReceitas([List<Receita> receitas]) async {
-    List<String> _receitas = receitas?.map((receita) => receita.toString())?.toList() ?? List<String>.empty();
-
-    if (_receitas.isEmpty) {
-      return await _setString(key: 'receitas');
-    }
-    
-    return await _preferences.setStringList('receitas', _receitas) ? notifyListeners() : false;
-  }
-
-  List<Receita> getReceitas() {
-    List<String> _receitas = _preferences.getStringList('receitas') ?? List<String>.empty();
-    if (_receitas.isNotEmpty) {
-      List<Receita> receitas = _receitas?.map((receita) => Receita.fromJson(receita))?.toList();
-      return receitas.isEmpty ? List<Receita>.empty() : receitas;
-    }
-
-    return List<Receita>();
-  }
-
   Future setPerfil([Perfil tipo]) async {
     await _setString(key: 'perfil', value: tipo ?? Perfil.usuario);
   }
@@ -132,7 +104,6 @@ class Preferences extends ChangeNotifier {
     _usuario = Usuario();
     _medico = Medico();
     _paciente = Paciente();
-    _receitas = List<Receita>.empty();
     _perfil = Perfil.usuario;
     return await _preferences.clear() ? notifyListeners() : false;
   }
