@@ -7,6 +7,35 @@ class EstadoNotifier extends ChangeNotifier {
   Estado _estado = Estado.normal;
   Estado get estado => _estado;
 
+  EstadoNotifier([double nivel]) {
+    final int division = nivel?.round() ?? 3;
+
+    switch(division) {
+      case 1:
+        _estado = Estado.muitoMal;
+        break;
+      case 2:
+        _estado = Estado.mal;
+        break;
+      case 3:
+        _estado = Estado.normal;
+        break;
+      case 4:
+        _estado = Estado.bem;
+        break;
+      case 5:
+        _estado = Estado.muitoBem;
+        break;
+      default:
+        _estado = Estado.normal;
+        break;
+    }
+
+    if (division > 0 && division <= 5) {
+      _nivel = nivel;
+    }
+  }
+
   mudarNivel(double nivel) {
     if (nivel < 0 || nivel > 5) {
       return false;

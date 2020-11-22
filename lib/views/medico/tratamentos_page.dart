@@ -238,6 +238,8 @@ class _TratamentosPageState extends State<TratamentosPage> {
     );
 
     _messenger.salvarTokenMedico(_medico.id);
+
+    fetchFirestore();
   }
   
   @override
@@ -253,7 +255,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
           shape: BoxShape.circle,
           color: Colors.white,
           border: Border.all(
-            color: ObserveColors.orange,
+            color: Colors.lightBlue[300],
             width: 2,
           )
         ),
@@ -262,8 +264,8 @@ class _TratamentosPageState extends State<TratamentosPage> {
             criarReceita();
           },
           shape: CircleBorder(),
-          highlightColor: ObserveColors.orange[30],
-          splashColor: ObserveColors.orange[30],
+          highlightColor: Colors.lightBlue[100],
+          splashColor: Colors.lightBlue[300],
           child: Container(
             height: 90,
             width: 90,

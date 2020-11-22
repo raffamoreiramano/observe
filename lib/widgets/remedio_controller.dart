@@ -158,9 +158,7 @@ class _RemedioControllerState extends State<RemedioController> {
                     r"^[1-9.-]+$|^0.[0-9]{1,2}$"
                   ).hasMatch(value);
 
-                  if(!isValid) {
-                    return 'Quantia inválida!';
-                  }
+                  return isValid ? null : 'Quantia inválida!';
                 },
                 style: TextStyle(
                   fontSize: 18,

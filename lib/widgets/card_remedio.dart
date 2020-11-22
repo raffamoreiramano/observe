@@ -7,18 +7,21 @@ import 'package:observe/models/remedio.dart';
 
 class CardRemedio extends StatefulWidget {
   final Remedio _remedio;
+  final Function(bool tomado) callback;
 
-  CardRemedio(this._remedio);
+  CardRemedio(this._remedio, {this.callback});
 
   @override
-  _CardRemedioState createState() => _CardRemedioState(this._remedio);
+  _CardRemedioState createState() => _CardRemedioState(_remedio, callback);
 }
 
 class _CardRemedioState extends State<CardRemedio> {
   EstadoRemedio _estado =  EstadoRemedio.adiantado;
   Remedio _remedio;
+  final Function _callback;
 
-  _CardRemedioState(this._remedio);
+
+  _CardRemedioState(this._remedio, this._callback);
   
 
   String _dosagem() {
@@ -56,13 +59,14 @@ class _CardRemedioState extends State<CardRemedio> {
   marcar() async {
     _remedio.tomado = !_remedio.tomado;
 
+    _callback.call(_remedio.tomado);
+
     final LocalDatabase _db = LocalDatabase();
 
     await _db.defineTable(TabelaRemedio());
 
     await _db.update(_remedio)
       .then((value) {
-        print('deu certo');
         setState(() {});
       }).catchError((erro) {
         _remedio.tomado = !_remedio.tomado;

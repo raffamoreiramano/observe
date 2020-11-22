@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:observe/classes/colors.dart';
+import 'package:observe/classes/notification.dart';
 import 'package:observe/classes/tabela_alarme.dart';
 import 'package:observe/helpers/database.dart';
 import 'package:observe/models/alarme.dart';
@@ -33,7 +33,7 @@ class _CardAlarmeState extends State<CardAlarme> {
       tz.TZDateTime _data = tz.TZDateTime(tz.getLocation('America/Sao_Paulo'), agora.year, agora.month, dia, _alarme.horas, _alarme.minutos);
 
       final AndroidNotificationDetails notificationDetails = AndroidNotificationDetails(
-        'Observe Paciente', 'Canal do paciente', 'Notificações locais para o paciente',
+        'alarme', 'canal de alarme', 'notifica o paciente sobre o horário do remédio',
         priority: Priority.max,
         importance: Importance.max,
         channelShowBadge: true,
@@ -50,11 +50,11 @@ class _CardAlarmeState extends State<CardAlarme> {
       );
 
       await context.read<FlutterLocalNotificationsPlugin>().zonedSchedule(
-        widget.alarme.id, widget.alarme.titulo, widget.alarme.texto, _data, NotificationDetails(android: notificationDetails), 
+        _alarme.id, _alarme.titulo, _alarme.texto, _data, NotificationDetails(android: notificationDetails), 
         androidAllowWhileIdle: true,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
-        payload: 'Teste',              
+        payload: _alarme.remedio.toString(),
       ).then((_) async {
         final LocalDatabase _db = LocalDatabase();
 
@@ -67,8 +67,8 @@ class _CardAlarmeState extends State<CardAlarme> {
         });
       }).catchError((erro) => print(erro.toString()));
     } else {
-      context.read<FlutterLocalNotificationsPlugin>().cancel(
-        widget.alarme.id
+      await context.read<FlutterLocalNotificationsPlugin>().cancel(
+        _alarme.id
       ).then((_) => setState(() {
         _alarme.ligado = false;
       })).catchError((erro) => print(erro.toString()));

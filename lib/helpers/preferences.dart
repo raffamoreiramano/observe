@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:observe/classes/enums.dart';
 import 'package:observe/models/medico.dart';
 import 'package:observe/models/paciente.dart';
-import 'package:observe/models/receita.dart';
 import 'package:observe/models/usuario.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,12 +16,17 @@ class Preferences extends ChangeNotifier {
   Paciente get paciente => _paciente;
   Perfil _perfil;
   Perfil get perfil => _perfil;
+  bool _tomado = false;
+  bool get tomado => _tomado;
+  double _estado = 3;
+  double get estado => _estado;
 
   Preferences(this._preferences) {
     _usuario = getUsuario();
     _medico = getMedico();
     _paciente = getPaciente();
     _perfil = getPerfil();
+    _tomado = getTomado();
   }
 
   Future _setString({String key, dynamic value}) async {
@@ -100,11 +104,56 @@ class Preferences extends ChangeNotifier {
     return Perfil.values.singleWhere((element) => element.toString() == tipo, orElse: () => Perfil.usuario);
   }
 
+  Future setTomado([bool value]) async {
+    _tomado = value ?? !_tomado;
+
+    return await _preferences.setBool('tomado', _tomado) ? notifyListeners() : false;
+  }
+
+  bool getTomado() {
+    bool tomado = _preferences.getBool('tomado');
+
+    if (tomado == null) {
+      _preferences.remove('tomado');
+      tomado = false;
+    }
+
+    return tomado;
+  }
+
+  Future setEstado([double value]) async {
+    if (value == null) {
+      
+      return await _preferences.remove('estado');
+    }
+
+    final bool response = await _preferences.setDouble('estado', value);
+
+    if (response) {
+      _estado = value;
+      notifyListeners();
+    }
+
+    return response;
+  }
+
+  double getEstado() {
+    double estado = _preferences.getDouble('estado');
+
+    if (estado == null) {
+      _preferences.remove('estado');
+      estado = 0;
+    }
+
+    return estado;
+  }
+
   Future clear() async {
     _usuario = Usuario();
     _medico = Medico();
     _paciente = Paciente();
     _perfil = Perfil.usuario;
+    _tomado = false;
     return await _preferences.clear() ? notifyListeners() : false;
   }
 }

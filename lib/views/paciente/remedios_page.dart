@@ -280,10 +280,65 @@ class _RemediosPageState extends State<RemediosPage> {
     );
 
     _messenger.salvarTokenMedico(_paciente.id);
+
+    fetchFirestore();
+  }
+
+  Future prontificarRetorno(List<Remedio> remedios, bool tomado) async {
+    final tomados = remedios.map((remedio) => remedio.tomado).toList();
+
+    if (remedios.length == tomados.length) {
+      context.read<Preferences>().setTomado(tomado);
+    }
+  }
+
+  Future resetarTabela() async {
+    final remedios = await fetchDatabase();
+
+    await _db.defineTable(TabelaRemedio());
+
+    remedios.forEach((remedio) async {
+      remedio.tomado = false;
+
+      await _db.update(remedio);
+    });    
+  }
+
+  enviarRetorno() async {
+    final estado = context.read<Preferences>().getEstado();
+
+    final snapshot = await _firestore
+      .collection('tratamentos')
+      .where('pid', isEqualTo: _paciente.id)
+      .orderBy(FieldPath.documentId)
+      .limitToLast(1)
+      .get();
+    
+    List<Tratamento> tratamentos = snapshot
+      .docs
+      .map((doc) => Tratamento.fromMap(doc.data()))
+      .toList();
+
+    
+    if (tratamentos.isEmpty) {
+      return;
+    }
+
+    Tratamento tratamento = tratamentos.single;
+
+    tratamento.retorno = DateTime.now();
+    tratamento.estado = estado;
+    
+    await _firestore
+      .doc('/tratamentos/${tratamento.id}')
+      .set(tratamento.toMap());
   }
   
   @override
   Widget build(BuildContext context) {
+    bool _tomado = context.select<Preferences, bool>((preferences) => preferences.tomado);
+    double _nivel = context.select<Preferences, double>((preferences) => preferences.estado);
+
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: BottomAppBar(
@@ -303,7 +358,7 @@ class _RemediosPageState extends State<RemediosPage> {
                     onPressed: () {
                       fichaMedica();
                     },
-                    padding: EdgeInsets.only(right: 40),                    
+                    padding: EdgeInsets.only(right: _tomado ? 40 : 0),                    
                     child: Icon(
                       Icons.assignment_outlined,
                       color: Colors.blueGrey,
@@ -321,7 +376,7 @@ class _RemediosPageState extends State<RemediosPage> {
                     onPressed: () {
                       alarmes();
                     },
-                    padding: EdgeInsets.only(left: 40),
+                    padding: EdgeInsets.only(left: _tomado ? 40 : 0),
                     child: Icon(
                       Icons.alarm,
                       color: Colors.blueGrey,
@@ -337,10 +392,20 @@ class _RemediosPageState extends State<RemediosPage> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: ChangeNotifierProvider<EstadoNotifier>(
-        create: (context) => EstadoNotifier(),
-        child: BotaoRetorno(),
-      ),
+      floatingActionButton: _tomado 
+        ? ChangeNotifierProvider<EstadoNotifier>(
+          create: (context) => EstadoNotifier(_nivel),
+          child: BotaoRetorno(
+            nivel: _nivel,
+            callback: (estado) {
+              context.read<Preferences>().setTomado(false);
+              context.read<Preferences>().setEstado(estado);
+              resetarTabela();
+              enviarRetorno();
+            },
+          ),
+        )
+        : null,
       body: RefreshIndicator(
         onRefresh: () {
           return fetchFirestore();
@@ -444,6 +509,9 @@ class _RemediosPageState extends State<RemediosPage> {
                           itemBuilder: (context, index) {
                             return CardRemedio(
                               _lista[index],
+                              callback: (tomado) {
+                                prontificarRetorno(_lista, tomado);
+                              },
                             );
                           },
                         );

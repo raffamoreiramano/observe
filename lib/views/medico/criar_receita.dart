@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:observe/classes/colors.dart';
-import 'package:observe/classes/enums.dart';
-import 'package:observe/helpers/preferences.dart';
 import 'package:observe/models/medico.dart';
 import 'package:observe/models/paciente.dart';
 import 'package:observe/models/receita.dart';
@@ -18,7 +16,6 @@ import 'package:observe/widgets/linha_ficha_medica.dart';
 import 'package:observe/widgets/loader.dart';
 import 'package:observe/widgets/multilinhas_ficha_medica.dart';
 import 'package:observe/widgets/remedio_controller.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 

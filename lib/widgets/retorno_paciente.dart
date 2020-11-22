@@ -7,6 +7,11 @@ import 'package:provider/provider.dart';
 import 'emoji.dart';
 
 class BotaoRetorno extends StatelessWidget {
+  final Function(double estado) callback;
+  final double nivel;
+ 
+  BotaoRetorno({this.nivel, this.callback});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -25,8 +30,11 @@ class BotaoRetorno extends StatelessWidget {
         onPressed: () {
           Get.dialog(
             ChangeNotifierProvider<EstadoNotifier>(
-              create: (context) => EstadoNotifier(),
-              child: ModalRetorno(context.read<EstadoNotifier>().nivel ?? 3),
+              create: (context) => EstadoNotifier(nivel),
+              child: ModalRetorno(
+                nivel: nivel,
+                callback: callback,
+              ),
             )
           ).then((value) => context.read<EstadoNotifier>().mudarNivel(value));
         },
@@ -49,18 +57,21 @@ class BotaoRetorno extends StatelessWidget {
 
 class ModalRetorno extends StatefulWidget {
   final double nivel;
+  final Function(double) callback;
 
-  ModalRetorno(this.nivel);
+  ModalRetorno({this.nivel, this.callback});
 
   @override
-  _ModalRetornoState createState() => _ModalRetornoState(nivel);
+  _ModalRetornoState createState() => _ModalRetornoState(nivel, callback);
 }
 
 class _ModalRetornoState extends State<ModalRetorno> {
   double _nivel;
   Estado _estado;
+  final Function _callback;
 
-  _ModalRetornoState(this._nivel);
+
+  _ModalRetornoState(this._nivel, this._callback);
   
   @override
   Widget build(BuildContext context) {
@@ -91,7 +102,20 @@ class _ModalRetornoState extends State<ModalRetorno> {
             Get.back(result: _nivel);
           },
           child: Text(
-            'Confirmar',
+            'CANCELAR',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.blueGrey[900],
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            _callback.call(_nivel);
+            Get.back(result: _nivel);
+          },
+          child: Text(
+            'CONFIRMAR',
             style: TextStyle(
               fontWeight: FontWeight.bold,
             ),

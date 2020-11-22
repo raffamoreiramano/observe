@@ -81,13 +81,27 @@ class Remedio extends Item {
   factory Remedio.fromJson(String data) => Remedio.fromMap(json.decode(data));
 
   Map<String, dynamic> toMap([bool mostrarTomado = false]) {
+    int _tomado;
+
+    switch(tomado) {
+      case true:
+        _tomado = 1;
+        break;
+      case false:
+        _tomado = 0;
+        break;
+      default:
+        _tomado = 0;
+        break;
+    }
+
     Map<String, dynamic> data = {
       'id': id,
       'nome': nome,
       'medida': medida,
       'quantia': quantia,
       'horario': _horario,
-      'tomado': mostrarTomado ? tomado : null,
+      'tomado': mostrarTomado ? _tomado : null,
     };
 
     data.removeWhere((key, value) {
