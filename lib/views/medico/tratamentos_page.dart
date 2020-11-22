@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -210,7 +209,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
     _messenger.initialize(
       onMessage: (notification) async {
         if (notification.type == 'retorno') {
-          final payload = json.decode(notification.payload);
+          // final payload = json.decode(notification.payload);
 
           // return await visualizarRetorno(payload['rid']);
         }
@@ -219,7 +218,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
       },
       onLaunch: (notification) async {
         if (notification.type == 'retorno') {
-          final payload = json.decode(notification.payload);
+          // final payload = json.decode(notification.payload);
 
           // return await visualizarRetorno(payload['rid']);
         }
@@ -228,7 +227,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
       },
       onResume: (notification) async {
         if (notification.type == 'retorno') {
-          final payload = json.decode(notification.payload);
+          // final payload = json.decode(notification.payload);
 
           // return await visualizarRetorno(payload['rid']);
         }

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:observe/classes/api_response.dart';
 import 'package:observe/classes/colors.dart';
-import 'package:observe/classes/enums.dart';
 import 'package:observe/helpers/preferences.dart';
 import 'package:observe/models/paciente.dart';
 import 'package:observe/models/usuario.dart';
@@ -214,37 +213,6 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
                   ),
                 ],
               ),
-              actions: [
-                PopupMenuButton(
-                  itemBuilder: (context) => <PopupMenuEntry<Opcoes>>[
-                    PopupMenuItem(
-                      value: Opcoes.config,
-                      child: Text('Configurações'),
-                    ),
-                    PopupMenuItem(
-                      value: Opcoes.trocar,
-                      child: Text('Trocar de perfil'),
-                    ),
-                    PopupMenuItem(
-                      value: Opcoes.sair,
-                      child: Text('Desconectar'),
-                    ),
-                  ],
-                  onSelected: (Opcoes opcoes) {
-                    switch (opcoes) {
-                      case Opcoes.config:
-                        print('popup :: Configurações');
-                        break;
-                      case Opcoes.trocar:
-                        print('popup :: Trocar de perfil');
-                        break;
-                      case Opcoes.sair:
-                        context.read<Preferences>().setPerfil(Perfil.usuario);
-                        break;
-                    }
-                  },
-                )
-              ],
             ),
             SliverToBoxAdapter(
               child: Column(

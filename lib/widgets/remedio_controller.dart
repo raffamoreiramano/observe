@@ -88,14 +88,19 @@ class _RemedioControllerState extends State<RemedioController> {
     return Form(
       key: _formKey,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 20),
+        padding: EdgeInsets.symmetric(vertical: 10),
+        margin: EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: ObserveColors.dark[5],
-          border: Border(
-            bottom: BorderSide(
-              color: ObserveColors.aqua[50],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey[200],
+              offset: Offset(0, 0.5),
+              blurRadius: 0.5,
+              spreadRadius: 0.5,
             )
-          )
+          ],
         ),
         child: ExpansionTile(
           tilePadding: EdgeInsets.symmetric(horizontal: 20),
@@ -110,9 +115,6 @@ class _RemedioControllerState extends State<RemedioController> {
                 expanded 
                   ? Icons.remove
                   : Icons.add,
-                color: expanded
-                  ? ObserveColors.red
-                  : ObserveColors.green
               ),
             ),
           ),
@@ -155,7 +157,7 @@ class _RemedioControllerState extends State<RemedioController> {
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 validator: (value) {
                   bool isValid = RegExp(
-                    r"^[1-9.-]+$|^0.[0-9]{1,2}$"
+                    r"^[1-9]*$|^0{1}\.[0-9]*$|^[1-9]+\.[0-9]*$"
                   ).hasMatch(value);
 
                   return isValid ? null : 'Quantia inválida!';
@@ -255,7 +257,7 @@ class _RemedioControllerState extends State<RemedioController> {
               ),
             ),
             Container(
-              margin: EdgeInsets.only(top: 30, bottom: 60),
+              margin: EdgeInsets.only(top: 30, bottom: 40),
               child: FlatButton(
                 onPressed: () {
                   if (_formKey.currentState.validate()) {
@@ -265,7 +267,7 @@ class _RemedioControllerState extends State<RemedioController> {
                 height: 50,
                 splashColor: ObserveColors.green,
                 highlightColor: Colors.white54,
-                color: ObserveColors.green[50],
+                color: _gravado ? ObserveColors.aqua[50] : ObserveColors.green[50],
                 child: Text(
                   _gravado ? 'ATUALIZAR' : 'ADICIONAR',
                   style: TextStyle(

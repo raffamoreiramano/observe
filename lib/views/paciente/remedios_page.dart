@@ -280,8 +280,6 @@ class _RemediosPageState extends State<RemediosPage> {
     );
 
     _messenger.salvarTokenMedico(_paciente.id);
-
-    fetchFirestore();
   }
 
   Future prontificarRetorno(List<Remedio> remedios, bool tomado) async {
