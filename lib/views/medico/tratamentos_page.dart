@@ -5,63 +5,54 @@ import 'package:get/get.dart';
 import 'package:observe/classes/api_response.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
-import 'package:observe/classes/tabela_alarme.dart';
-import 'package:observe/classes/tabela_remedio.dart';
+import 'package:observe/classes/tabela_tratamento.dart';
 import 'package:observe/helpers/database.dart';
 import 'package:observe/helpers/preferences.dart';
-import 'package:observe/models/alarme.dart';
-import 'package:observe/models/estado_do_paciente.dart';
-import 'package:observe/models/paciente.dart';
-import 'package:observe/models/receita.dart';
+import 'package:observe/models/medico.dart';
 import 'package:observe/models/tratamento.dart';
 import 'package:observe/models/usuario.dart';
-import 'package:observe/repositories/receita_repository.dart';
 import 'package:observe/services/auth.dart';
 import 'package:observe/services/messenger.dart';
-import 'package:observe/views/paciente/alarmes_page.dart';
-import 'package:observe/views/paciente/ficha_medica.dart';
-import 'package:observe/views/paciente/formulario_paciente.dart';
-import 'package:observe/widgets/card_remedio.dart';
+import 'package:observe/views/medico/criar_receita.dart';
+import 'package:observe/views/medico/formulario_medico.dart';
+import 'package:observe/widgets/card_tratamento.dart';
 import 'package:observe/widgets/loader.dart';
-import 'package:observe/widgets/retorno_paciente.dart';
 import 'package:provider/provider.dart';
-import 'package:observe/models/remedio.dart';
+import 'package:observe/views/paciente/ficha_medica.dart';
 
-class RemediosPage extends StatefulWidget {
+class TratamentosPage extends StatefulWidget {
   final Usuario usuario;
-  final Paciente paciente;
+  final Medico medico;
   
-  RemediosPage({this.usuario, this.paciente});
+  TratamentosPage({this.usuario, this.medico});
 
   @override
-  _RemediosPageState createState() => _RemediosPageState(usuario, paciente);
+  _TratamentosPageState createState() => _TratamentosPageState(usuario, medico);
 }
 
-class _RemediosPageState extends State<RemediosPage> {
+class _TratamentosPageState extends State<TratamentosPage> {
   final Usuario _usuario;
-  final Paciente _paciente;
+  final Medico _medico;
   final _db = LocalDatabase();
-  CloudMessenger _messenger;
-  FirebaseFirestore _firestore;
   final GlobalKey<State> _futureKey = GlobalKey<State>();
+  FirebaseFirestore _firestore;
+  CloudMessenger _messenger;
   bool _visible = true;
 
-  _RemediosPageState(this._usuario, this._paciente);
+  _TratamentosPageState(this._usuario, this._medico);
 
-  Future<List<Remedio>> fetchDatabase() async {
-    List<Remedio> _lista = List<Remedio>.empty();
+  Future<List<Tratamento>> fetchDatabase() async {
+    List<Tratamento> _lista = List<Tratamento>.empty();
 
-    await _db.defineTable(TabelaRemedio());
+    await _db.defineTable(TabelaTratamento());
 
     _lista = await _db.read();
     
-    _lista.sort((r1, r2) {
-      final int h1 = r1.horario.hour;
-      final int h2 = r2.horario.hour;
-      final int m1 = r1.horario.minute;
-      final int m2 = r2.horario.minute;
+    _lista.sort((t1, t2) {
+      final DateTime h1 = t1.retorno;
+      final DateTime h2 = t2.retorno;
 
-      return DateTime(0, 0, 0, h1, m1).compareTo(DateTime(0, 0, 0, h2, m2)) * -1;
+      return h1.compareTo(h2) * -1;
     });
 
     return _lista;
@@ -71,15 +62,11 @@ class _RemediosPageState extends State<RemediosPage> {
     Get.to(FichaMedica());
   }
 
-  alarmes() {
-    Get.to(AlarmsPage());
-  }
-
   editarPerfil() {
     Get.to(
-      FormularioPaciente(
+      FormularioMedico(
         usuario: context.read<Preferences>().usuario,
-        paciente: context.read<Preferences>().paciente,
+        medico: context.read<Preferences>().medico,
       )
     ).then((retorno) {
       if (retorno is! APIResponse) {
@@ -133,73 +120,36 @@ class _RemediosPageState extends State<RemediosPage> {
     );
   }
 
-  salvarReceita(Receita receita) async {
-    await _db.defineTable(TabelaRemedio());
+  Future<void> salvarTratamentos(List<Tratamento> tratamentos) async {
+    await _db.defineTable(TabelaTratamento());
 
     await _db.clear();
 
-    List<Remedio> remedios = receita.remedios;
-    
-    remedios.forEach((remedio) async {
-      remedio.id = remedios.indexOf(remedio);
-      await _db.create(remedio);
+    tratamentos.forEach((tratamento) async {
+      await _db.create(tratamento);
     });
 
-    List<Alarme> alarmes = remedios.map((remedio) {
-      return Alarme(
-        id: remedios.indexOf(remedio),
-        ligado: false,
-        remedio: remedio
-      );
-    }).toList();
-
-    await _db.defineTable(TabelaAlarme());
-
-    await _db.clear();
-
-    alarmes.forEach((alarme) async {
-      await _db.create(alarme);
-    });
 
     setState(() {
       _visible = true;
     });
-
-    _futureKey.currentState.reassemble();
-  }
-
-  fetchAPI(int rid) async {
-    final ReceitaRepository _repo = ReceitaRepository();
-
-    await _repo.readReceita(rid)
-      .then((receita) {
-        salvarReceita(receita);
-      }).catchError((erro) {
-        print(erro);
-      });
   }
 
   Future<void> fetchFirestore() async {
     final snapshot = await _firestore
       .collection('tratamentos')
-      .where('pid', isEqualTo: _paciente.id)
-      .orderBy(FieldPath.documentId)
-      .limitToLast(1)
+      .where('mid', isEqualTo: _medico.id)
       .get();
     
     List<Tratamento> tratamentos = snapshot
       .docs
       .map((doc) => Tratamento.fromMap(doc.data()))
       .toList();
-    
-    if (tratamentos.isEmpty) {
-      return;
-    }
 
-    await fetchAPI(tratamentos.single.id);
+    await salvarTratamentos(tratamentos);
   }
 
-  confirmarReceita(int rid) {
+  visualizarRetorno() {
     Get.dialog(
       AlertDialog(
         title: Text('Nova receita recebida!'),
@@ -217,7 +167,7 @@ class _RemediosPageState extends State<RemediosPage> {
                 _visible = false;
               });
 
-              fetchAPI(rid);
+              fetchFirestore();
 
               Get.back();
             },
@@ -244,6 +194,14 @@ class _RemediosPageState extends State<RemediosPage> {
     );
   }
 
+  Future<void> criarReceita() async {
+    Get.to(CriarReceita(
+      medico: _medico,
+      usuarioMedico: _usuario,
+    ));
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -251,161 +209,76 @@ class _RemediosPageState extends State<RemediosPage> {
     _messenger = CloudMessenger(_firestore);
     _messenger.initialize(
       onMessage: (notification) async {
-        if (notification.type == 'receita') {
+        if (notification.type == 'retorno') {
           final payload = json.decode(notification.payload);
 
-          return await confirmarReceita(payload['rid']);
+          // return await visualizarRetorno(payload['rid']);
         }
 
         return null;
       },
       onLaunch: (notification) async {
-        if (notification.type == 'receita') {
+        if (notification.type == 'retorno') {
           final payload = json.decode(notification.payload);
 
-          return await confirmarReceita(payload['rid']);
+          // return await visualizarRetorno(payload['rid']);
         }
 
         return null;
       },
       onResume: (notification) async {
-        if (notification.type == 'receita') {
+        if (notification.type == 'retorno') {
           final payload = json.decode(notification.payload);
 
-          return await confirmarReceita(payload['rid']);
+          // return await visualizarRetorno(payload['rid']);
         }
 
         return null;
       },
     );
 
-    _messenger.salvarTokenMedico(_paciente.id);
+    _messenger.salvarTokenMedico(_medico.id);
 
     fetchFirestore();
-  }
-
-  Future prontificarRetorno(List<Remedio> remedios, bool tomado) async {
-    final tomados = remedios.map((remedio) => remedio.tomado).toList();
-
-    if (remedios.length == tomados.length) {
-      context.read<Preferences>().setTomado(tomado);
-    }
-  }
-
-  Future resetarTabela() async {
-    final remedios = await fetchDatabase();
-
-    await _db.defineTable(TabelaRemedio());
-
-    remedios.forEach((remedio) async {
-      remedio.tomado = false;
-
-      await _db.update(remedio);
-    });    
-  }
-
-  enviarRetorno() async {
-    final estado = context.read<Preferences>().getEstado();
-
-    final snapshot = await _firestore
-      .collection('tratamentos')
-      .where('pid', isEqualTo: _paciente.id)
-      .orderBy(FieldPath.documentId)
-      .limitToLast(1)
-      .get();
-    
-    List<Tratamento> tratamentos = snapshot
-      .docs
-      .map((doc) => Tratamento.fromMap(doc.data()))
-      .toList();
-
-    
-    if (tratamentos.isEmpty) {
-      return;
-    }
-
-    Tratamento tratamento = tratamentos.single;
-
-    tratamento.retorno = DateTime.now();
-    tratamento.estado = estado;
-    
-    await _firestore
-      .doc('/tratamentos/${tratamento.id}')
-      .set(tratamento.toMap());
   }
   
   @override
   Widget build(BuildContext context) {
-    bool _tomado = context.select<Preferences, bool>((preferences) => preferences.tomado);
-    double _nivel = context.select<Preferences, double>((preferences) => preferences.estado);
-
     return Scaffold(
       extendBody: true,
-      bottomNavigationBar: BottomAppBar(
-        clipBehavior: Clip.hardEdge,
-        notchMargin: 5,
-        shape: CircularNotchedRectangle(),
-        child: Container(
-          height: 70,
-          width: MediaQuery.of(context).size.width,
-          child: Row(            
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Expanded(
-                child: Container(
-                  height: 70,
-                  child: RawMaterialButton(
-                    onPressed: () {
-                      fichaMedica();
-                    },
-                    padding: EdgeInsets.only(right: _tomado ? 40 : 0),                    
-                    child: Icon(
-                      Icons.assignment_outlined,
-                      color: Colors.blueGrey,
-                      size: 30,
-                    ),
-                    highlightColor: ObserveColors.aqua[30],
-                    splashColor: ObserveColors.aqua[30],
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  height: 70,
-                  child: RawMaterialButton(
-                    onPressed: () {
-                      alarmes();
-                    },
-                    padding: EdgeInsets.only(left: _tomado ? 40 : 0),
-                    child: Icon(
-                      Icons.alarm,
-                      color: Colors.blueGrey,
-                      size: 30,
-                    ),
-                    highlightColor: ObserveColors.aqua[30],
-                    splashColor: ObserveColors.aqua[30],
-                  ),
-                ),
-              ),
-            ],
+      floatingActionButton: Container(
+        margin: EdgeInsets.all(10),
+        height: 90,
+        width: 90,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          border: Border.all(
+            color: Colors.lightBlue[300],
+            width: 2,
+          )
+        ),
+        child: RawMaterialButton(
+          onPressed: () {
+            criarReceita();
+          },
+          shape: CircleBorder(),
+          highlightColor: Colors.lightBlue[100],
+          splashColor: Colors.lightBlue[300],
+          child: Container(
+            height: 90,
+            width: 90,
+            padding: EdgeInsets.only(
+              left: 7,
+            ),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.playlist_add, size: 30, color: Colors.blueGrey[300]),
           ),
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: _tomado 
-        ? ChangeNotifierProvider<EstadoNotifier>(
-          create: (context) => EstadoNotifier(_nivel),
-          child: BotaoRetorno(
-            nivel: _nivel,
-            callback: (estado) {
-              context.read<Preferences>().setTomado(false);
-              context.read<Preferences>().setEstado(estado);
-              resetarTabela();
-              enviarRetorno();
-            },
-          ),
-        )
-        : null,
       body: RefreshIndicator(
         onRefresh: () {
           return fetchFirestore();
@@ -420,10 +293,10 @@ class _RemediosPageState extends State<RemediosPage> {
               leading: Container(
                 margin: EdgeInsets.only(left: 15),
                 child: CircleAvatar(
-                  backgroundColor: ObserveColors.aqua[30],
-                  foregroundColor: ObserveColors.aqua,
+                  backgroundColor: ObserveColors.orange[30],
+                  foregroundColor: ObserveColors.orange,
                   child: Icon(
-                    Icons.person_rounded,
+                    Icons.healing_rounded,
                     size: 30,
                   ),
                 ),
@@ -439,7 +312,7 @@ class _RemediosPageState extends State<RemediosPage> {
                     ),
                   ),
                   Text(
-                    'ID: ${_paciente.id}',
+                    'CRM: ${_medico.crm}',
                     style: TextStyle(
                       fontWeight: FontWeight.w100,
                       color: Colors.white70,
@@ -488,12 +361,12 @@ class _RemediosPageState extends State<RemediosPage> {
                   alignment: Alignment.center,
                   child: Loader(),            
                 ),
-                child: FutureBuilder<List<Remedio>>(
+                child: FutureBuilder<List<Tratamento>>(
                   key: _futureKey,
                   future: fetchDatabase(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      List<Remedio> _lista = snapshot.data;
+                      List<Tratamento> _lista = snapshot.data;
 
                       if (_lista.isNotEmpty) {
                         return ListView.builder(
@@ -507,11 +380,9 @@ class _RemediosPageState extends State<RemediosPage> {
                           physics: NeverScrollableScrollPhysics(),
                           itemCount: _lista.length,              
                           itemBuilder: (context, index) {
-                            return CardRemedio(
-                              _lista[index],
-                              callback: (tomado) {
-                                prontificarRetorno(_lista, tomado);
-                              },
+                            return CardTratamento(
+                              index: index,
+                              tratamento: _lista[index],
                             );
                           },
                         );
@@ -520,9 +391,7 @@ class _RemediosPageState extends State<RemediosPage> {
                       return Padding(
                         padding: EdgeInsets.all(50),
                         child: Text(
-                          'Parece que você ainda não tem nenhuma receita disponível...'
-                          '\n\n'
-                          'Solicite ao seu médico que mande a receita para o seu ID!',
+                          'Parece que você ainda não acompanha nenhum tratamento...',
                           style: TextStyle(
                             color: Colors.blueGrey,
                           ),

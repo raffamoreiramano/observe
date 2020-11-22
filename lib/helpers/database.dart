@@ -1,4 +1,4 @@
-import 'package:observe/classes/tabelas.dart';
+import 'package:observe/classes/tabela_abstract.dart';
 import 'package:observe/models/item.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/sqlite_api.dart';
@@ -47,7 +47,19 @@ class LocalDatabase {
         await db.execute(
           'CREATE TABLE alarme ('
           'id INTEGER PRIMARY KEY, '
+          'remedio TEXT NOT NULL, '
           'ligado INTEGER DEFAULT 0);'
+        );
+        await db.execute(
+          'CREATE TABLE tratamento ('
+          'id INTEGER PRIMARY KEY, '
+          'mid INTEGER NOT NULL, '
+          'pid INTEGER NOT NULL, '
+          'medico TEXT NOT NULL, '
+          'paciente TEXT NOT NULL, '
+          'inicio TEXT NOT NULL, '
+          'retorno TEXT NOT NULL, '
+          'estado REAL);'
         );
       },
     );

@@ -1,40 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:observe/classes/colors.dart';
 import 'package:observe/classes/enums.dart';
+import 'package:observe/classes/tabela_remedio.dart';
+import 'package:observe/helpers/database.dart';
 import 'package:observe/models/remedio.dart';
 
 class CardRemedio extends StatefulWidget {
   final Remedio _remedio;
-  final Function callback;
+  final Function(bool tomado) callback;
+
   CardRemedio(this._remedio, {this.callback});
 
   @override
-  _CardRemedioState createState() => _CardRemedioState(this._remedio.horario.hour, this._remedio.horario.minute, this._remedio.tomado);
+  _CardRemedioState createState() => _CardRemedioState(_remedio, callback);
 }
 
 class _CardRemedioState extends State<CardRemedio> {
   EstadoRemedio _estado =  EstadoRemedio.adiantado;
-  int _horas;
-  int _minutos;
-  bool _tomado;
+  Remedio _remedio;
+  final Function _callback;
 
-  _CardRemedioState(this._horas, this._minutos, this._tomado);
+
+  _CardRemedioState(this._remedio, this._callback);
   
 
   String _dosagem() {
-    String medida = widget._remedio.medida;
-    double quantia = widget._remedio.quantia;
+    String medida = _remedio.medida;
+    double quantia = _remedio.quantia;
 
     if (medida == 'unidade') {
-      medida += widget._remedio.quantia.ceil() >= 2 ? 's' : '';
+      medida += _remedio.quantia.ceil() >= 2 ? 's' : '';
     }
 
     return quantia.toStringAsFixed(quantia.truncateToDouble() == quantia ? 0 :  1) + ' $medida';
   }
 
   String _horario() {
-    final horas = _horas < 10 ? '0' + _horas.toString() : _horas.toString();
-    final minutos = _minutos < 10 ? '0' + _minutos.toString() : _minutos.toString();
+    final horas = _remedio.horario.hour < 10 ? '0' + _remedio.horario.hour.toString() : _remedio.horario.hour.toString();
+    final minutos = _remedio.horario.minute < 10 ? '0' + _remedio.horario.minute.toString() : _remedio.horario.minute.toString();
 
     return '$horas:$minutos';
   }
@@ -53,20 +56,30 @@ class _CardRemedioState extends State<CardRemedio> {
     }
   }
 
-  marcar() {
-    setState(() {
-      _tomado = !_tomado;
-      widget.callback.call(_tomado);
-    });
+  marcar() async {
+    _remedio.tomado = !_remedio.tomado;
+
+    _callback.call(_remedio.tomado);
+
+    final LocalDatabase _db = LocalDatabase();
+
+    await _db.defineTable(TabelaRemedio());
+
+    await _db.update(_remedio)
+      .then((value) {
+        setState(() {});
+      }).catchError((erro) {
+        _remedio.tomado = !_remedio.tomado;
+      });
   }
 
   @override
   Widget build(BuildContext context) {
     int horas = TimeOfDay.now().hour;
     int minutos = TimeOfDay.now().minute;
-    bool _atrasado = DateTime(0, 0, 0, horas, minutos).isAfter(DateTime(0, 0, 0, _horas, _minutos));    
+    bool _atrasado = DateTime(0, 0, 0, horas, minutos).isAfter(DateTime(0, 0, 0, _remedio.horario.hour, _remedio.horario.minute));    
 
-    if (_tomado) {
+    if (_remedio.tomado) {
       _estado = EstadoRemedio.tomado;
     } else {
       _estado = _atrasado ? EstadoRemedio.atrasado : EstadoRemedio.adiantado;

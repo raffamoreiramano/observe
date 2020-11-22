@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:observe/helpers/preferences.dart';
+import 'package:observe/models/remedio.dart';
 import 'package:observe/services/auth.dart';
 import 'package:observe/views/authentication_page.dart';
 import 'package:observe/views/main_page.dart';
+import 'package:observe/views/paciente/main_page.dart';
+import 'package:observe/views/paciente/remedios_page.dart';
 import 'package:observe/views/verification_page.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +17,8 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 FlutterLocalNotificationsPlugin notifications = FlutterLocalNotificationsPlugin();
+
+Function onSelectNotification;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,11 +33,7 @@ void main() async {
 
   await notifications.initialize(
     initializationSettings,
-    onSelectNotification: (String payload) async {
-      if (payload != null) {
-        print('notification payload: $payload');
-      }
-    },
+    onSelectNotification: onSelectNotification,
   );
 
   await Firebase.initializeApp();
@@ -74,11 +75,11 @@ class MyApp extends StatelessWidget {
 }
 
 class AuthenticationWrapper extends StatelessWidget {
-  // AuthenticationWrapper() {
-  //   onSelectNotification = (notification) {
-  //     Get.to(AlarmsPage());
-  //   };
-  // }
+  AuthenticationWrapper() {
+    onSelectNotification = (String payload) {
+      print('############');
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
