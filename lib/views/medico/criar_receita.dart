@@ -188,7 +188,7 @@ class _CriarReceitaState extends State<CriarReceita> {
 
   }
 
-  buscar() async {
+  Future buscar() async {
     PacienteRepository _pacienteRepo = PacienteRepository();
     UsuarioRepository _usuarioRepo = UsuarioRepository();
 
@@ -200,24 +200,22 @@ class _CriarReceitaState extends State<CriarReceita> {
           _paciente = Paciente();
         });
 
-      _paciente.doencas.removeWhere((e) => e.isEmpty);
-      _paciente.alergias.removeWhere((e) => e.isEmpty);
-      _paciente.remedios.removeWhere((e) => e.isEmpty);
 
       if (_paciente.isNotEmpty) {
+        _paciente.doencas.removeWhere((e) => e.isEmpty);
+        _paciente.alergias.removeWhere((e) => e.isEmpty);
+        _paciente.remedios.removeWhere((e) => e.isEmpty);
+
         await _usuarioRepo.readUsuario(id: _paciente.uid)
           .then((usuario) async {
             _usuario = usuario;
           }).catchError((erro) {
             _usuario = Usuario();
           });
-
       }
     }
 
-    setState(() {
-      _visible = true;
-    });
+    return;
   }
   
   @override
@@ -286,19 +284,24 @@ class _CriarReceitaState extends State<CriarReceita> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: ObserveColors.dark[5],
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: ObserveColors.aqua[50],
-                                )
-                              )
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Stack(
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey[200],
+                                      offset: Offset(0, 0.5),
+                                      blurRadius: 0.5,
+                                      spreadRadius: 0.5,
+                                    )
+                                  ],
+                                ),
+                                child: Stack(
                                   children: [
                                     TextFormField(
                                       controller: _pidCTRL,
@@ -331,7 +334,7 @@ class _CriarReceitaState extends State<CriarReceita> {
                                             setState(() {
                                               _visible = false;
                                             });
-                                            buscar();
+                                            buscar().whenComplete(() => setState(() => _visible = true));
                                           },
                                           child: Container(
                                             height: 62,
@@ -356,132 +359,154 @@ class _CriarReceitaState extends State<CriarReceita> {
                                       : Container()
                                   ],
                                 ),
-                                _paciente.isEmpty
-                                  ? Container()
-                                  : Container(
-                                    padding: EdgeInsets.all(12),
-                                    child: Column(
-                                      children: [
-                                        LinhaFicha(
-                                          label: 'ID',
-                                          texto: _paciente?.id?.toString(),
-                                        ),
-                                        LinhaFicha(
-                                          label: 'NOME',
-                                          texto: _usuario?.nome,
-                                        ),
-                                        LinhaFicha(
-                                          label: 'SOBRENOME',
-                                          texto: _usuario?.sobrenome,
-                                        ),
-                                        LinhaFicha(
-                                          label: 'DATA DE NASCIMENTO',
-                                          texto: _dateFormat.format(_paciente?.nascimento ?? DateTime.now()),
-                                        ),
-                                        MultiLinhasFicha(
-                                          label: 'DOENÇAS CRÔNICAS',
-                                          linhas: _paciente?.doencas,
-                                        ),
-                                        MultiLinhasFicha(
-                                          label: 'ALERGIAS',
-                                          linhas: _paciente?.alergias,
-                                        ),
-                                        MultiLinhasFicha(
-                                          label: 'REMÉDIOS CONSUMIDOS',
-                                          linhas: _paciente?.remedios,
-                                        ),
-                                      ],
+                              ),
+                              _paciente.isEmpty
+                                ? Padding(
+                                  padding: EdgeInsets.only(top: 20),
+                                  child: Text(
+                                    'Nenhum paciente selecionado...',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.blueGrey,
                                     ),
                                   ),
-                                ListView.builder(
-                                  key: _listKey,
-                                  physics: NeverScrollableScrollPhysics(),
-                                  shrinkWrap: true,
-                                  itemCount: _remedios.length + 1,
-                                  itemBuilder: _remedios.isEmpty
-                                    ? (context, index) {
-                                      return Dismissible(
-                                        key: Key('$index'),
-                                        confirmDismiss: (direction) {
-                                          if (_remedios.length == index) {
-                                            return Future(() {
-                                              return false;
-                                            });
-                                          } else {
-                                            _remedios.removeAt(index);
-                                            return Future(() {
-                                              return true;
-                                            });
-                                          }
-                                        },
-                                        child: RemedioController(
-                                          Remedio(),
-                                          adicionar: (Remedio remedio) {
-                                            setState(() {
-                                              print('ADICIONAR :: $index');
-                                              _remedios.add(remedio);
-                                            });
-                                          },
-                                          atualizar: (Remedio remedio) {
-                                            setState(() {
-                                              _remedios[index] = remedio;
-                                              print('ATUALIZAR :: $index');
-                                            });
-                                          },
-                                        ),
-                                      );
-                                    }
-                                    : (context, index) {
-                                      final _ultimo = _remedios.length - 1;
-                                      Remedio _remedio = Remedio();
-                                      Function _adicionar = (Remedio remedio) {
-                                        setState(() {
-                                          print('ADICIONAR :: $index');
-                                          _remedios.add(remedio);
-                                        });
-                                      };
-                                      Function _atualizar = (Remedio remedio) {
-                                        setState(() {
-                                          print('ATUALIZAR :: $index');
-                                          _remedios[index] = remedio;
-                                        });
-                                      };
-
-                                      if (index <= _ultimo) {
-                                        _remedio = _remedios.elementAt(index);
-                                      }
-
-                                      return Dismissible(
-                                        key: Key('$index'),
-                                        confirmDismiss: (direction) {
-                                          if (_remedios.length == index) {
-                                            return Future(() {
-                                              return false;
-                                            });
-                                          } else {
-                                            _remedios.removeAt(index);
-                                            return Future(() {
-                                              return true;
-                                            });
-                                          }
-                                        },
-                                        child: RemedioController(
-                                          _remedio,
-                                          adicionar: _adicionar,
-                                          atualizar: _atualizar,
-                                        ),
-                                      );
-                                  },
+                                )
+                                : Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey[200],
+                                        offset: Offset(0, 0.5),
+                                        blurRadius: 0.5,
+                                        spreadRadius: 0.5,
+                                      )
+                                    ],
+                                  ),
+                                  padding: EdgeInsets.all(20),
+                                  margin: EdgeInsets.only(top: 20),
+                                  child: Column(
+                                    children: [
+                                      LinhaFicha(
+                                        label: 'ID',
+                                        texto: _paciente?.id?.toString(),
+                                      ),
+                                      LinhaFicha(
+                                        label: 'NOME',
+                                        texto: _usuario?.nome,
+                                      ),
+                                      LinhaFicha(
+                                        label: 'SOBRENOME',
+                                        texto: _usuario?.sobrenome,
+                                      ),
+                                      LinhaFicha(
+                                        label: 'DATA DE NASCIMENTO',
+                                        texto: _dateFormat.format(_paciente?.nascimento ?? DateTime.now()),
+                                      ),
+                                      MultiLinhasFicha(
+                                        label: 'DOENÇAS CRÔNICAS',
+                                        linhas: _paciente?.doencas,
+                                      ),
+                                      MultiLinhasFicha(
+                                        label: 'ALERGIAS',
+                                        linhas: _paciente?.alergias,
+                                      ),
+                                      MultiLinhasFicha(
+                                        label: 'REMÉDIOS CONSUMIDOS',
+                                        linhas: _paciente?.remedios,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ],
-                            ),
-                          )
+                              ListView.builder(
+                                key: _listKey,
+                                physics: NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemCount: _remedios.length + 1,
+                                itemBuilder: _remedios.isEmpty
+                                  ? (context, index) {
+                                    return Dismissible(                                      
+                                      key: Key('$index'),
+                                      confirmDismiss: (direction) {
+                                        if (_remedios.length == index) {
+                                          return Future(() {
+                                            return false;
+                                          });
+                                        } else {
+                                          _remedios.removeAt(index);
+                                          return Future(() {
+                                            return true;
+                                          });
+                                        }
+                                      },
+                                      child: RemedioController(
+                                        Remedio(),
+                                        adicionar: (Remedio remedio) {
+                                          setState(() {
+                                            print('ADICIONAR :: $index');
+                                            _remedios.add(remedio);
+                                          });
+                                        },
+                                        atualizar: (Remedio remedio) {
+                                          setState(() {
+                                            _remedios[index] = remedio;
+                                            print('ATUALIZAR :: $index');
+                                          });
+                                        },
+                                      ),
+                                    );
+                                  }
+                                  : (context, index) {
+                                    final _ultimo = _remedios.length - 1;
+                                    Remedio _remedio = Remedio();
+                                    Function _adicionar = (Remedio remedio) {
+                                      setState(() {
+                                        print('ADICIONAR :: $index');
+                                        _remedios.add(remedio);
+                                      });
+                                    };
+                                    Function _atualizar = (Remedio remedio) {
+                                      setState(() {
+                                        print('ATUALIZAR :: $index');
+                                        _remedios[index] = remedio;
+                                      });
+                                    };
+
+                                    if (index <= _ultimo) {
+                                      _remedio = _remedios.elementAt(index);
+                                    }
+
+                                    return Dismissible(
+                                      key: Key('$index'),
+                                      confirmDismiss: (direction) {
+                                        if (_remedios.length == index) {
+                                          return Future(() {
+                                            return false;
+                                          });
+                                        } else {
+                                          _remedios.removeAt(index);
+                                          return Future(() {
+                                            return true;
+                                          });
+                                        }
+                                      },
+                                      child: RemedioController(
+                                        _remedio,
+                                        adicionar: _adicionar,
+                                        atualizar: _atualizar,
+                                      ),
+                                    );
+                                },
+                              ),
+                            ],
+                          ),
                         ],                    
                       ),
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.only(top: 30, bottom: 60),
+                    margin: EdgeInsets.only(top: 15, bottom: 60),
                     child: FlatButton(
                       onPressed: () {
                         enviar();

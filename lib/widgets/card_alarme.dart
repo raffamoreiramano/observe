@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:observe/classes/colors.dart';
-import 'package:observe/classes/notification.dart';
 import 'package:observe/classes/tabela_alarme.dart';
 import 'package:observe/helpers/database.dart';
 import 'package:observe/models/alarme.dart';
