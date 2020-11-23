@@ -95,6 +95,7 @@ class _TratamentosPageState extends State<TratamentosPage> {
             onPressed: () {
               context.read<Preferences>().clear();
               context.read<AuthMethods>().signOut();
+              Get.back();
             },
             child: Text(
               'SIM',

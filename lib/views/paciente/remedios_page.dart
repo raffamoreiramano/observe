@@ -109,6 +109,7 @@ class _RemediosPageState extends State<RemediosPage> {
             onPressed: () {
               context.read<Preferences>().clear();
               context.read<AuthMethods>().signOut();
+              Get.back();
             },
             child: Text(
               'SIM',
@@ -279,14 +280,22 @@ class _RemediosPageState extends State<RemediosPage> {
       },
     );
 
-    _messenger.salvarTokenMedico(_paciente.id);
+    _messenger.salvarTokenPaciente(_paciente.id);
   }
 
   Future prontificarRetorno(List<Remedio> remedios, bool tomado) async {
-    final tomados = remedios.map((remedio) => remedio.tomado).toList();
+    final tomados = remedios.map((remedio){
+      if (remedio.tomado) {
+        return remedio;
+      }
+    }).toList();
+
+    tomados.removeWhere((element) => element == null);
 
     if (remedios.length == tomados.length) {
-      context.read<Preferences>().setTomado(tomado);
+      context.read<Preferences>().setTomado(true);
+    } else {
+      context.read<Preferences>().setTomado(false);
     }
   }
 

@@ -326,7 +326,7 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
                             autovalidateMode: AutovalidateMode.onUserInteraction,
                             validator: (value) {
                               bool isValid = RegExp(
-                                r"^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
+                                r"^[0-9A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
                               ).hasMatch(value);
 
                               if (isValid) {
@@ -357,7 +357,7 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
                             autovalidateMode: AutovalidateMode.onUserInteraction,
                             validator: (value) {
                               bool isValid = RegExp(
-                                r"^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
+                                r"^[0-9A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
                               ).hasMatch(value);
 
                               if (isValid) {
@@ -388,7 +388,7 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
                             autovalidateMode: AutovalidateMode.onUserInteraction,
                             validator: (value) {
                               bool isValid = RegExp(
-                                r"^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
+                                r"^[0-9A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ., -]*$"
                               ).hasMatch(value);
 
                               if (isValid) {
