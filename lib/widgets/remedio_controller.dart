@@ -157,7 +157,7 @@ class _RemedioControllerState extends State<RemedioController> {
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 validator: (value) {
                   bool isValid = RegExp(
-                    r"^[1-9]*$|^0{1}\.[0-9]*$|^[1-9]+\.[0-9]*$"
+                    r"^[1-9]+[0-9]*$|^0{1}\.[0-9]*$|^[1-9]+[0-9]*\.[0-9]*$"
                   ).hasMatch(value);
 
                   return isValid ? null : 'Quantia inválida!';

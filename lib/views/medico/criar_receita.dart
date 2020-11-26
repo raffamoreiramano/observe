@@ -76,6 +76,7 @@ class _CriarReceitaState extends State<CriarReceita> {
 
       return;
     }
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
     final ReceitaRepository _repo = ReceitaRepository();
 
@@ -85,9 +86,22 @@ class _CriarReceitaState extends State<CriarReceita> {
       remedios: _remedios
     );
 
+    final snapshot = await _firestore
+      .collection('tratamentos')
+      .where('pid', isEqualTo: _paciente.id)
+      .where('mid', isEqualTo: _medico.id)
+      .orderBy(FieldPath.documentId)
+      .get();
+
+    snapshot.docs.forEach((element) async {
+      final id = element.id;
+
+      await _firestore.doc('/tratamentos/$id').delete();
+      await _repo.deleteReceita(int.parse(id));
+    });
+
     await _repo.createReceita(_receita)
       .then((receita) async {
-        final FirebaseFirestore _firestore = FirebaseFirestore.instance;
         final Tratamento _tratamento = Tratamento(
           id: receita.id,
           mid: receita.mid,
@@ -182,10 +196,6 @@ class _CriarReceitaState extends State<CriarReceita> {
       setState(() {
         _visible = true;
       });
-  }
-
-  adicionarRemedio() {
-
   }
 
   Future buscar() async {

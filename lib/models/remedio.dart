@@ -24,7 +24,6 @@ class Remedio extends Item {
 
     
     _horario = _format.format(DateTime(0, 0, 0, value.hour, value.minute));
-    print(_horario);
   }
 
   bool get isEmpty {

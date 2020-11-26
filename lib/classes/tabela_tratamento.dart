@@ -6,8 +6,7 @@ class TabelaTratamento extends Tabela {
 
   @override
   Future<void> create(Tratamento tratamento) async {
-    var result = await database.insert(tabela, tratamento.toMap());
-    print('result : $result');
+    await database.insert(tabela, tratamento.toMap());
   }
 
   @override
@@ -20,8 +19,7 @@ class TabelaTratamento extends Tabela {
 
   @override
   Future<void> update(Tratamento tratamento) async {
-    var result = await database.update(tabela, tratamento.toMap(), where: 'id = ?', whereArgs: [tratamento.id]);
-    print('result : $result');
+    await database.update(tabela, tratamento.toMap(), where: 'id = ?', whereArgs: [tratamento.id]);
   }
 
   @override

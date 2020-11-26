@@ -104,7 +104,7 @@ class _AlarmsPageState extends State<AlarmsPage> {
                 tooltip: 'Mostrar menu',
                 itemBuilder: (context) => [
                   PopupMenuItem(
-                    child: Text('Editar ficha')
+                    child: Text('. . .')
                   ),
                 ],
                 onSelected: (_) {
