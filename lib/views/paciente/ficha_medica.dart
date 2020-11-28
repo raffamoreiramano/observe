@@ -13,6 +13,24 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 class FichaMedica extends StatelessWidget {
+  editarPerfil(Usuario usuario, Paciente paciente) {
+    Get.to(
+      FormularioPaciente(
+        usuario: usuario,
+        paciente: paciente,
+      )
+    ).then((retorno) {
+      if (retorno is! APIResponse) {
+        Get.showSnackbar(GetBar(
+          backgroundColor: ObserveColors.dark,
+          title: 'Ok',
+          message: 'Fingiremos que nada aconteceu...',
+          duration: Duration(seconds: 2),
+        ));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     initializeDateFormatting('pt_BR', null);
@@ -67,21 +85,7 @@ class FichaMedica extends StatelessWidget {
                   ),
                 ],
                 onSelected: (_) {
-                  Get.to(
-                    FormularioPaciente(
-                      usuario: context.read<Preferences>().usuario,
-                      paciente: context.read<Preferences>().paciente,
-                    )
-                  ).then((retorno) {
-                    if (retorno is! APIResponse) {
-                      Get.showSnackbar(GetBar(
-                        backgroundColor: ObserveColors.dark,
-                        title: 'Ok',
-                        message: 'Fingiremos que nada aconteceu...',
-                        duration: Duration(seconds: 2),
-                      ));
-                    }
-                  });
+                  editarPerfil(_usuario, _paciente);
                 },
               )
             ],

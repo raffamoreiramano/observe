@@ -105,7 +105,7 @@ class _FormularioPacienteState extends State<FormularioPaciente> {
     Paciente paciente = Paciente(
       id: _novo ? null : _paciente.id,
       uid: _usuario.id,
-      nascimento: _novo ? _dateFormat.parse(_nascimentoCTRL.text.trim()) : null,
+      nascimento: _dateFormat.parse(_nascimentoCTRL.text.trim()),
       doencas: doencas.isEmpty ? null : doencas,
       alergias: alergias.isEmpty ? null : alergias,
       remedios: remedios.isEmpty ? null : remedios,
